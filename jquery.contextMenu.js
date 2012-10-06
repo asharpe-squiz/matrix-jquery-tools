@@ -204,7 +204,6 @@ var // currently active contextMenu trigger
         contextmenu: function(e) {
 			// disabled menu
 			if (e.data.disabled) {
-			console.log('bailing on disabled menu');
 				return;
 			}
 
