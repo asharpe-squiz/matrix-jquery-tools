@@ -4,7 +4,7 @@
 #map_root {font: .9em/.6em Helvetica, Arial, Geneva, sans-serif; color: #000;}
 
 /* Remove any offending styles */
-#map_root a, 
+#map_root a,
 #map_root :link,
 #map_root :visited {text-decoration:none;}
 #map_root ul,
@@ -13,7 +13,7 @@
 #map_root a img,
 #map_root :link img,
 #map_root :visited img {border:none;}
-#map_root a:focus, 
+#map_root a:focus,
 #map_root a:visited {outline-style: none;}
 
 /* Tree */
@@ -21,7 +21,7 @@
 #map_root li a {color: #000; font-size: .9em; line-height: 12px; height: 14px;}
 #map_root li a:hover {color: #000;}
 #map_root li img {margin-bottom: 0;}
-#map_root a.asset_name {display: block; float: left; margin-left: 18px; padding: 0 2px; border: 1px solid #fff;}
+#map_root a.asset_name {display: block; float: left; margin-left: 18px; padding: 1px 2px; /*border: 1px solid #fff;*/}
 #map_root span.asset_hold {display: block; float: left; border: 1px solid #000;}
 
 /* Stalks */
