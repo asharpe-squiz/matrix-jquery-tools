@@ -25,6 +25,7 @@
 #map_root span.asset_hold {display: block; float: left; border: 1px solid #000;}
 
 /* Stalks */
+/* TODO take URL paths out of here */
 #map_root ul {background: url(/__lib/web/images/tree/stalk.gif) repeat-y -5px 0; padding: 0 0 0 16px;}
 #map_root li {display: block; line-height: 18px; padding: 0 0 0 14px; background: url(/__lib/web/images/tree/stalk.gif) no-repeat -5px 0; clear: both; height: 16px;}
 #map_root li.closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px 0;}
@@ -47,3 +48,4 @@
 /* Status */
 #map_root a.live {background-color: #dbf18a; border: 1px solid #ccc;}
 #map_root a.construction {background-color: #aaccdd; border: 1px solid #ccc;}
+

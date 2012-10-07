@@ -16,8 +16,17 @@ Limitations:
 	use me - the context menu we've chosen only allows one trigger, so we've
 		used two context maps to be triggered by different means
 
+
+
+// TODO figure out where not_accessible.png is used
+// see asset_map.inc:470
+									'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
+									'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
+
+
 */
 
+var init;
 
 (function ($) {
 
@@ -37,21 +46,24 @@ MODE_USEME = 6;
 $(document).ready(function() {
 
 	// commonly used for context menus
+	// In all context menus on the tree we're going to try to target the
+	// LI element for the tree node as it contains all relevant information
+	// for that asset (and tree behaviour)
 	$.extend($.contextMenu.defaults, {
 		events: {
 			show: function(options) {
 console.log('show.this', this);
 console.log('show.args', arguments);
 				// store the node that was clicked
-				options.target = this.closest('li');
+				options.$target = this.closest('li');
 			},
 			hide: function(options) {
 				// this is called in addition to the command callback
 				// so in the command callback we unset the target to
 				// indicate our work is done, otherwise we want to keep the
 				// mode the same
-				if (!options.target) {
-console.log('context hide changing map mode');
+				if (!options.$target) {
+console.log('context menu hide changing map mode from', $map.mode.current);
 					$map.mode.change(1);
 				}
 			}
@@ -59,9 +71,11 @@ console.log('context hide changing map mode');
 	});
 
 	// context menu for move/link/clone
+	$map.menus['select'] = $map.selector + ' .asset_hold';
 	$.contextMenu({
-		selector: $map.selector + ' .asset_hold',
+		selector: $map.menus['select'],
 		trigger: 'left',
+		disabled: true,
 		events: {
 			hide: $.noop // override the default above
 		},
@@ -76,7 +90,7 @@ console.log('context hide changing map mode');
 						alert('Bad state - nothing selected!');
 					}
 
-					$matrix.backend.moveAssets($map.selected, options.target);
+					$matrix.backend.moveAssets($map.selected, options.$target);
 				}
 			},
 			newlink: {
@@ -102,52 +116,68 @@ console.log('context hide changing map mode');
 	});
 
 
+	// common function for useme result
+	var usemeCallback = function usemeCallback(key, options) {
+		if (!options.$target) {
+			alert('Bad state - no target!');
+		}
+
+console.log('selector', options.selector);
+console.log('target', options.$target);
+
+		var attrs = options.$target.find('a.asset_name').get(0).attributes;
+
+		// using setTimeout to uncouple things
+		// may not be necessary
+		setTimeout(function() {
+			// see MatrixMenus.java:205
+			asset_finder_done(
+				attrs.getNamedItem('assetid'),
+				attrs.getNamedItem('name'),
+				attrs.getNamedItem('url'),
+				attrs.getNamedItem('linkid')
+			);
+		}, 100);
+
+		// this indicates to the context menus hide method that
+		// we've achieved our goal
+		delete(options.$target);
+	};
+
+
 	// context menu for useme via left click
+	$map.menus['useme-li'] = $map.selector + ' li';
 	$.contextMenu({
 		// TODO need to allow expansion when this is active
-		selector: $map.selector + ' li',
+		selector: $map.menus['useme-li'],
 		trigger: 'left',
+		disabled: true,
 		events: {
 			show: function(options) { // override the default above
 				// store the node that was clicked
-				options.target = this;
+// TODO keep this consisten - make target a reference to jquery
+				options.$target = this;
 			}
 		},
 		items: {
 			useme: {
 				name: 'Use me',
-				callback: function(key, options) {
-					if (!options.target) {
-						alert('Bad state - no target!');
-					}
-
-console.log('target', options.target);
-					$map.mode.change(1);
-//					$matrix.backend.moveAssets($map.selected, options.target);
-				}
+				callback: usemeCallback
 			}
 		}
 	});
 
-
 	// context menu for useme via left click
+	$map.menus['useme-name'] = $map.selector + ' a.asset_name';
 	$.contextMenu({
 		// TODO need to allow expansion when this is active
-		selector: $map.selector + ' a.asset_name',
+		selector: $map.menus['useme-name'],
 		trigger: 'left',
+		disabled: true,
 		items: {
 			useme: {
 				name: 'Use me',
-				callback: function(key, options) {
-					if (!options.target) {
-						alert('Bad state - no target!');
-					}
-
-console.log('target', options.target);
-					delete(options.target);
-
-					// TODO finish the useme
-				}
+				callback: usemeCallback
 			}
 		}
 	});
@@ -202,7 +232,13 @@ $.fn.matrix = {
 				default:
 				break;
 			}
-		}
+		},
+		// this stores the context menu items for asset typs
+		// we're storing the menu details here because they'll be built dynamically
+		// and this gives us the flexibility to add/remove types etc without reload
+		menuItems: {},
+		// store the selectors for the different menus to accurately enable/disable
+		menus: {}
 	},
 	backend: {
 		// TODO work out our path better
@@ -298,23 +334,29 @@ $map.mode[MODE_SELECT] = {
 
 console.log('context menu enabled');
 		// enable the context menu for targets
-		$('.asset_hold').contextMenu(true);
+//		$($map.selector + ' .asset_hold').contextMenu(true);
+		$($map.menus['select']).contextMenu(true);
 	},
 	exit: function() {
-		$('.asset_hold').contextMenu(false);
+		$($map.menus['select']).contextMenu(true);
+//		$('.asset_hold').contextMenu(false);
 	}
 }
 $map.mode[MODE_USEME] = {
 	enter: function() {
 		$($map.selector).css('background-color', 'E9D4F4');
-		$($map.selector + ' a.asset_name').contextMenu(true);
-		$($map.selector + ' li').contextMenu(true);
+		$($map.menus['useme-name']).contextMenu(true);
+		$($map.menus['useme-li']).contextMenu(true);
+//		$($map.selector + ' a.asset_name').contextMenu(true);
+//		$($map.selector + ' li').contextMenu(true);
 	},
 	exit: function() {
 		$($map.selector).css('background-color', 'inherit');
 		// disable the context menus
-		$($map.selector + ' a.asset_name').contextMenu(false);
-		$($map.selector + ' li').contextMenu(false);
+		$($map.menus['useme-name']).contextMenu(false);
+		$($map.menus['useme-li']).contextMenu(false);
+//		$($map.selector + ' a.asset_name').contextMenu(false);
+//		$($map.selector + ' li').contextMenu(false);
 	}
 };
 
@@ -361,6 +403,12 @@ $matrix.util = {
 	getCommandXML: function getCommandXML(action, params, children) {
 		return $matrix.util.getCommand(action, params, children)
 			.wrap('<p/>').parent().html();
+	},
+	getIconUrl: function getIconUrl(assetType) {
+		return $matrix.backend.getUrl('/__data/asset_types/' + assetType + '/icon.png');
+	},
+	createCSSRule: function createCSSRule(assetType) {
+		_createCSSRule('.context-menu-item.icon-' + assetType, 'background-image: url(' + $matrix.util.getIconUrl(assetType) + ');');
 	}
 };
 
@@ -383,45 +431,193 @@ var initialise = function(callback) {
 		},
 */
 		success: function(xml) {
-
+init = $(xml);
+//console.log(init);
 			var items = {};
+
+			// an array of type names for sorting
+			var types = [];
+			// a map of arrays of type names for sorting
+			var subTypes = {};
+
+			// We need to order the types by their type_codes
+			// see MatrixMenus.java:369
 
 			// Check each type that we find
 			$(xml).find('type').each(function() {
-				// Only include those with a flash_menu_path
-				var path = $(this).attr('flash_menu_path');
-				if (path) {
-					// Set some of our vars that will populate our asset map
-					var type_code = $(this).attr('type_code');
-					var version = $(this).attr('version');
-					var name = unescape($(this).attr('name'));
-					var access = $(this).attr('allowed_access');
-					var parent_type = parseInt($(this).attr('parent_type'));
-					var instantiable = $(this).attr('instantiable');
+				var $this = $(this);
 
-					var screens = {};
-					$(this).find('screen').each(function() {
-						screens[$(this).attr('code_name')] = $(this).text();
-					});
+				var path = $this.attr('flash_menu_path');
+				var type = $this.attr('type_code');
 
+				// get screens (context menu items)
+				// TODO order these
+				var m = $map.menuItems[$this.attr('type_code')] = {};
+				var mIndex = 0;
+				$this.find('screen').each(function() {
+					m[$(this).attr('code_name')] = {
+						name: $(this).text(),
+						index: mIndex++
+					}
+				});
+
+				// we skip if there's no path or it's not instantiable
+				// see AssetType.java:75
+				var instantiable = $this.attr('instantiable') === '1' || $this.attr('allowed_access') === 'system';
+
+				if (path && instantiable) {
 					if (!items[path]) {
 						items[path] = {
 							name: path,
+							icon: type, // takes the icon of the first type in this group
 							items: {}
-						}
+						};
+
+						// info for sorting
+						types.push(path);
+						subTypes[path] = [];
 					}
 
-					items[path]['items'][type_code] = {
-						name: name
+					items[path]['items'][type] = {
+						name: unescape($this.attr('name')),
+						// TODO need to use the generic icon when this fails
+						icon: type,
+						info: $this
 					};
+					// info for sorting
+					subTypes[path].push(unescape($this.attr('name')));
 
-				}// End if
+					// construct an icon style
+					$matrix.util.createCSSRule(type);
+				}
 
 			});// End each
 
-			// TODO this is covered by the disabled context menu on a.asset_name
+			// see http://stackoverflow.com/questions/8996963/how-to-perform-case-insensitive-sorting-in-javascript
+			var caseInsensitiveSort = function caseInsensitiveSort(a, b) {
+				if (a.toLowerCase() < b.toLowerCase()) return -1;
+				if (a.toLowerCase() > b.toLowerCase()) return 1;
+				return 0;
+			};
+
+			types.sort(caseInsensitiveSort);
+			items['order'] = types;
+
+			// ordering sucks!
+			// we need to order the submenus by name, however the menus
+			// are built using their keys to index them :-/
+
+			// find a menu key given the menu and an items name
+			var findKey = function findKey(menu, itemName) {
+				for (var k in menu) {
+					if (!menu.hasOwnProperty(k)) continue;
+
+					if (menu[k]['name'] === itemName) return k;
+				}
+
+//console.log('menu', menu);
+//console.log('itemName', itemName);
+				throw new Error('Cannot find menu item named "' + itemName + '"');
+			};
+
+			// sort the submenus
+			for (type in subTypes) {
+				if (!subTypes.hasOwnProperty(type)) continue;
+
+				// order by name
+				subTypes[type].sort(caseInsensitiveSort);
+
+				// now replace with the type_code
+				for (var i = 0, last = subTypes[type].length; i < last; i++) {
+					subTypes[type][i] = findKey(items[type]['items'], subTypes[type][i]);
+				}
+
+				items[type]['items']['order'] = subTypes[type];
+
+				// see jquery.contextMenu.js:1130
+				// lame attempt at setting the width of the submenu
+/*
+				var longest = 0;
+				$(subTypes[type]).each(function(i, subType) {
+					if (items[type]['items'][String(subType)]['name'].length > longest) {
+						longest = items[type]['items'][String(subType)]['name'].length;
+					}
+				});
+				switch (true) {
+					case longest > 25: items[type]['className'] = 'wide'; break;
+					case longest > 15: items[type]['className'] = 'medium'; break;
+				}
+console.log(type, longest);
+*/
+			}
+
+			// whack a separator and folder on the end
+			items['sep'] = '-';
+			items['folder'] = {
+				name: 'Folder',
+				icon: 'folder'
+			};
+			items['order'].push('sep');
+			items['order'].push('folder');
+
+			// preferring to do the folder CSS here because the base URL can change
+			$matrix.util.createCSSRule('folder');
+
+//console.log('items', items);
+
+
+			// common bits on each types context menu
+			var typeCommon = {
+				sep: '-',
+				teleport: {
+					name: 'Teleport',
+					disabled: true
+				},
+				refresh: {
+					name: 'Refresh',
+					callback: function(key, options) {
+console.log('TODO refreshing something')
+					},
+					disabled: true
+				},
+				prev: {
+					name: 'No Previous Child',
+					disabled: true,
+					callback: function(key, options) {
+console.log('TODO figure out what previous child option does');
+					}
+				},
+				'new': {
+					name: 'New Child',
+					items: items
+				}
+			};
+
+			// create context menus for each asset type
+			$.each($map.menuItems, function(k, v) {
+				$.extend(v, typeCommon);
+			});
+
+
+			$map.menus['asset'] = $map.selector + ' li.asset';
 			$.contextMenu({
-				selector: $map.selector,
+				selector: $map.menus['asset'],
+				trigger: 'right',
+				build: function($trigger, e) {
+console.log('building menu', arguments);
+					return {
+						callback: $.noop,
+						items: {}
+					}
+				}
+			});
+
+
+console.log('$map.menus', $map.menus);
+
+			$map.menus['main'] = $map.selector;
+			$.contextMenu({
+				selector: $map.menus['main'],
 //				autoHide: true,
 				trigger: 'right',
 				callback: function(key, options) {
@@ -431,14 +627,10 @@ console.log('callback.this', this);
 console.log('callback.target', options.target);
 				},
 				items: items
+//				items: $map.menus['page_standard']
 			});
 
-/*
-			$('#map_root').on('click', function(e){
-				console.log('clicked', this);
-			});
-*/
-
+			// play on ;)
 			callback && callback();
 		}// End success
 
@@ -559,13 +751,18 @@ var get_children = function get_children(host_url, xml_get, parent, current_asse
 						asset_image = type_2_image + asset_image;
 					}
 
-					var info = $('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
+					var info = $('<li></li>')
+						.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
 						.appendTo(target)
 						// See if we have kids
 						.addClass(asset_num_kids > 0 ? 'kids_closed' : '')
+						.addClass('asset') // the following classes are used for menu control (menus are based on selectors)
+						.addClass('asset-type-' + asset_type_code)
 						.children('a:last');
 
 					// add our info
+					// TODO this is bad, should consider using prop or data instead
+					// see http://api.jquery.com/prop/
 					$.each(this.attributes, function(i, attr) {
 						info.attr(attr.name, attr.value.replace(/^asset_/, ''));
 					});
@@ -578,7 +775,7 @@ var get_children = function get_children(host_url, xml_get, parent, current_asse
 			$('ul li:last-child').addClass('last');
 
 			// disable this context menu
-			$($map.selector + ' li').contextMenu(false);
+//			$($map.selector + ' li').contextMenu(false);
 		}// End success
 
 	});// End ajax
@@ -612,7 +809,6 @@ console.log('with', this.target);
 					var types = bits[0].split('|');
 					var positions = bits[1].split('|');
 
-					$map.mode.change(MODE_USEME);
 //					console.log('target', $(this.target));
 //					$(this.target).find($map.selector).css('background-color', 'E9D4F4');
 //					console.log($(this.target).css('background-color'));
@@ -621,6 +817,7 @@ console.log('with', this.target);
 					switch (command) {
 						case 'assetFinderStarted':
 							var types = params_str.split('~');
+							$map.mode.change(MODE_USEME);
 							break;
 						case 'assetFinderStopped':
 							break;
@@ -628,7 +825,8 @@ console.log('with', this.target);
 
 					break;
 			}
-		}
+		},
+		getMap: function() { return $map; }
 	};
 }
 
@@ -656,7 +854,7 @@ $.fn.matrixMap = function (options) {
 	// Create our element
 	obj.append('<ul id="map_root"></ul>');
 
-	initialise(function() { load_root(defaults.root); });
+	initialise(function() {load_root(defaults.root);});
 
 	// Lets double click our parents to show their children
 	$(document).on('dblclick', $map.selector + ' li a', function() {
@@ -757,5 +955,80 @@ console.log('target', this);
 	}//end debug
 
 };// End matrixMap
+
+// see http://stackoverflow.com/questions/1720320/how-to-dynamically-create-css-class-in-javascript-and-apply
+function _createCSSRule(selector, style) {
+    if (!document.styleSheets) {
+        return;
+    }
+
+    if (document.getElementsByTagName("head").length == 0) {
+        return;
+    }
+
+    var stylesheet;
+    var mediaType;
+    if (document.styleSheets.length > 0) {
+        for (i = 0; i < document.styleSheets.length; i++) {
+            if (document.styleSheets[i].disabled) {
+                continue;
+            }
+            var media = document.styleSheets[i].media;
+            mediaType = typeof media;
+
+            if (mediaType == "string") {
+                if (media == "" || (media.indexOf("screen") != -1)) {
+                    styleSheet = document.styleSheets[i];
+                }
+            } else if (mediaType == "object") {
+                if (media.mediaText == "" || (media.mediaText.indexOf("screen") != -1)) {
+                    styleSheet = document.styleSheets[i];
+                }
+            }
+
+            if (typeof styleSheet != "undefined") {
+                break;
+            }
+        }
+    }
+
+    if (typeof styleSheet == "undefined") {
+        var styleSheetElement = document.createElement("style");
+        styleSheetElement.type = "text/css";
+
+        document.getElementsByTagName("head")[0].appendChild(styleSheetElement);
+
+        for (i = 0; i < document.styleSheets.length; i++) {
+            if (document.styleSheets[i].disabled) {
+                continue;
+            }
+            styleSheet = document.styleSheets[i];
+        }
+
+        var media = styleSheet.media;
+        mediaType = typeof media;
+    }
+
+    if (mediaType == "string") {
+        for (i = 0; i < styleSheet.rules.length; i++) {
+            if (styleSheet.rules[i].selectorText.toLowerCase() == selector.toLowerCase()) {
+                styleSheet.rules[i].style.cssText = style;
+                return;
+            }
+        }
+
+        styleSheet.addRule(selector, style);
+    } else if (mediaType == "object") {
+        for (i = 0; i < styleSheet.cssRules.length; i++) {
+            if (styleSheet.cssRules[i].selectorText.toLowerCase() == selector.toLowerCase()) {
+                styleSheet.cssRules[i].style.cssText = style;
+                return;
+            }
+        }
+
+        styleSheet.insertRule(selector + "{" + style + "}", 0);
+    }
+}
+
 
 })(jQuery);
