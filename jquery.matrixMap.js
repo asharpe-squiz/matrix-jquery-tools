@@ -17,16 +17,22 @@ Limitations:
 		used two context maps to be triggered by different means
 
 
+TODO
+	polling for refresh - see AssetMap.java:246
 
-// TODO figure out where not_accessible.png is used
-// see asset_map.inc:470
-									'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
-									'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
+	figure out where not_accessible.png is used asset_map.inc:470
+		'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
+		'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
 
 
 */
 
 var init;
+
+// allow the asset finder to work
+//var SQ_DOCUMENT_LOADED = false;
+
+console.log(top.frames['sq_sidenav'].document.jQuery);
 
 (function ($) {
 
@@ -42,8 +48,12 @@ MODE_LINK = 4;
 MODE_SELECT = 5;
 MODE_USEME = 6;
 
-
 $(document).ready(function() {
+	// allow the asset finder to work
+	SQ_DOCUMENT_LOADED = true;
+});
+
+var buildContextMenus = function buildContextMenus() {
 
 	// commonly used for context menus
 	// In all context menus on the tree we're going to try to target the
@@ -67,7 +77,9 @@ console.log('context menu hide changing map mode from', $map.mode.current);
 					$map.mode.change(1);
 				}
 			}
-		}
+		},
+		// bumping this up to cover the "hidden" (type_2 link) asset icon
+		zIndex: 2
 	});
 
 	// context menu for move/link/clone
@@ -117,31 +129,49 @@ console.log('context menu hide changing map mode from', $map.mode.current);
 
 
 	// common function for useme result
-	var usemeCallback = function usemeCallback(key, options) {
-		if (!options.$target) {
-			alert('Bad state - no target!');
-		}
+	var usemeItems = {
+		useme: {
+			// TODO translation
+			name: $matrix.util.translate('asset_map_menu_useme'),
+			callback: function usemeCallback(key, options) {
+				if (!options.$target) {
+					alert('Bad state - no target!');
+				}
 
 console.log('selector', options.selector);
 console.log('target', options.$target);
 
-		var attrs = options.$target.find('a.asset_name').get(0).attributes;
+				var attrs = options.$target.find('a.asset_name').get(0).attributes;
+				// see MatrixTreeNode.java:141
+				var getUrl = function(url, webPath) {
+					if (url == null) {
+						return "";
+					} else if (webPath == null) {
+						return url;
+					}
+					return url + "/" + webPath;
+				}
 
-		// using setTimeout to uncouple things
-		// may not be necessary
-		setTimeout(function() {
-			// see MatrixMenus.java:205
-			asset_finder_done(
-				attrs.getNamedItem('assetid'),
-				attrs.getNamedItem('name'),
-				attrs.getNamedItem('url'),
-				attrs.getNamedItem('linkid')
-			);
-		}, 100);
+				// using setTimeout to uncouple things
+				// may not be necessary
+				setTimeout(function() {
+					// see MatrixMenus.java:205
+					asset_finder_done(
+						attrs.getNamedItem('assetid').value,
+						attrs.getNamedItem('name').value,
+						// TODO this is still wrong
+						// I have no idea how this is working
+//						getUrl(attrs.getNamedItem('url').value, attrs.getNamedItem('web_path').value),
+						attrs.getNamedItem('url').value,
+						attrs.getNamedItem('linkid').value
+					);
+				}, 100);
 
-		// this indicates to the context menus hide method that
-		// we've achieved our goal
-		delete(options.$target);
+				// this indicates to the context menus hide method that
+				// we've achieved our goal
+				delete(options.$target);
+			}
+		}
 	};
 
 
@@ -150,21 +180,15 @@ console.log('target', options.$target);
 	$.contextMenu({
 		// TODO need to allow expansion when this is active
 		selector: $map.menus['useme-li'],
-		trigger: 'left',
+		trigger: 'right',
 		disabled: true,
 		events: {
 			show: function(options) { // override the default above
-				// store the node that was clicked
-// TODO keep this consisten - make target a reference to jquery
+				// store the node that was clicked (jQuery)
 				options.$target = this;
 			}
 		},
-		items: {
-			useme: {
-				name: 'Use me',
-				callback: usemeCallback
-			}
-		}
+		items: usemeItems
 	});
 
 	// context menu for useme via left click
@@ -172,16 +196,11 @@ console.log('target', options.$target);
 	$.contextMenu({
 		// TODO need to allow expansion when this is active
 		selector: $map.menus['useme-name'],
-		trigger: 'left',
+		trigger: 'right',
 		disabled: true,
-		items: {
-			useme: {
-				name: 'Use me',
-				callback: usemeCallback
-			}
-		}
+		items: usemeItems
 	});
-});
+};
 
 /*
 var selectMenu = function selectMenu() {
@@ -190,14 +209,15 @@ var selectMenu = function selectMenu() {
 }
 */
 
-// Find out what site we are at
-/*
-var proto = location.protocol;
-var site = location.host;
-var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
-*/
+
 $.fn.matrix = {
 	map: {
+		// TODO supply these from PHP
+		params: {
+
+		},
+		// TODO get this from elsewhere
+		locale: 'en_AU',
 		selector: '#map_root',
 		mode: {
 			current: MODE_NORMAL,
@@ -254,6 +274,34 @@ $.fn.matrix = {
 				params || {}
 			))
 		},
+		// TODO make asset an object
+		getScreenUrl: function getScreenUrl(screen, asset) {
+			// see MatrixMenus.java:147
+//				Matrix.getProperty("parameter.url.baseurl") +
+//				Matrix.getProperty("parameter.backendsuffix") +
+//				"/?SQ_BACKEND_PAGE=main&backend_section=" +
+//				"am&am_section=edit_asset&assetid=" + assetid +
+//				"&sq_asset_path=" + assetPath + "&sq_link_path=" +
+//				linkPath + "&asset_ei_screen=" + screenName;
+console.log('asset', asset);
+
+			// TODO get the link path which is a comma separated list of link
+			// ids up to the root
+			// TODO get the asset path which is a comma separated list of asset
+			// ids up to the root
+
+			// TODO get backendsuffix from somewhere
+			return $matrix.backend.getUrl('/_admin/', {
+				SQ_BACKEND_PAGE: 'main',
+				backend_secion: 'am',
+				am_section: 'edit_asset',
+				assetid: asset.attr('assetid'),
+				sq_asset_path: asset.attr('path'),
+				sq_link_path: asset.attr('linkid'),
+				asset_ei_screen: screen,
+				SQ_ACTION: null // overwrite this
+			});
+		},
 		moveAssets: function(assets, target) {
 console.log('target', target);
 console.log('selected', $map.selected[0]);
@@ -294,13 +342,16 @@ $matrix = $.fn.matrix;
 $map = $matrix.map;
 
 // attach mode handlers here because JS doesn't evaluate the LHS of an object property
+// TODO document the context these methods are triggered in
 $map.mode[MODE_NORMAL] = {
 	enter: function() {
-		$($map.selector + ' li')
-			.trigger('mouseleave')
-			.unbind('hover');
+		// enable the standard asset context menu
+		$($map.menus['asset']).contextMenu(true);
 	},
-	exit: $.noop
+	exit: function() {
+		// disable the standard asset context menu
+		$($map.menus['asset']).contextMenu(false);
+	}
 };
 /*
 $map.mode[MODE_MOVE] = {
@@ -324,7 +375,7 @@ $map.mode[MODE_SELECT] = {
 			$matrix.util.mode5unhover
 		);//end hover
 
-		// TODO need to record what was selected
+		// record what was selected
 		var item = $(this).closest('li');
 		$map.selected = [item];
 		$map.select.call(item.find('a.asset_name'));
@@ -332,31 +383,37 @@ $map.mode[MODE_SELECT] = {
 		// and we're already hovering over ourselves
 		item.trigger('mouseenter');
 
-console.log('context menu enabled');
-		// enable the context menu for targets
-//		$($map.selector + ' .asset_hold').contextMenu(true);
+		// enable link/copy/clone context menu
 		$($map.menus['select']).contextMenu(true);
 	},
 	exit: function() {
-		$($map.menus['select']).contextMenu(true);
-//		$('.asset_hold').contextMenu(false);
+		// disable link/copy/clone context menu
+		$($map.menus['select']).contextMenu(false);
+
+		// disable hover
+		$($map.selector + ' li')
+			.trigger('mouseleave')
+			.unbind('hover');
 	}
 }
 $map.mode[MODE_USEME] = {
+	color: null,
 	enter: function() {
+		// funky colour
+		$map.mode[MODE_USEME].color = $($map.selector).css('background-color');
 		$($map.selector).css('background-color', 'E9D4F4');
+
+		// enable the "useme" context menus
 		$($map.menus['useme-name']).contextMenu(true);
 		$($map.menus['useme-li']).contextMenu(true);
-//		$($map.selector + ' a.asset_name').contextMenu(true);
-//		$($map.selector + ' li').contextMenu(true);
 	},
 	exit: function() {
-		$($map.selector).css('background-color', 'inherit');
-		// disable the context menus
+		// inherit whatever colour came before
+		$($map.selector).css('background-color', $map.mode[MODE_USEME].color);
+
+		// disable the "useme" context menus
 		$($map.menus['useme-name']).contextMenu(false);
 		$($map.menus['useme-li']).contextMenu(false);
-//		$($map.selector + ' a.asset_name').contextMenu(false);
-//		$($map.selector + ' li').contextMenu(false);
 	}
 };
 
@@ -409,10 +466,67 @@ $matrix.util = {
 	},
 	createCSSRule: function createCSSRule(assetType) {
 		_createCSSRule('.context-menu-item.icon-' + assetType, 'background-image: url(' + $matrix.util.getIconUrl(assetType) + ');');
+	},
+	translate: function translate() {
+		// see Matrix.java:55
+		var translation = $matrix.util.translationData[$map.locale][arguments[0]];
+
+		if (!translation) return arguments[0];
+		if (arguments.length > 1) {
+			return $matrix.util.replaceParams(translation, [].splice.call(arguments, 1));
+		}
+
+		return translation;
+	},
+	// TODO this needs be initialised with at least $map.locale
+	translationData: {},
+	// see http://stackoverflow.com/questions/1353408/messageformat-in-javascript-parameters-in-localized-ui-strings
+	replaceParams: function replaceParams(string, replacements) {
+		return string.replace(/\{(\d+)\}/g, function() {
+			return replacements[arguments[1]];
+		});
 	}
 };
 
-var initialise = function(callback) {
+
+var initialise = function initialise(callback) {
+	initialiseTranslations(function() {
+		initialiseAssets(callback);
+	});
+};
+
+
+var initialiseTranslations = function initialiseTranslations(callback) {
+	$.ajax({
+		url: $matrix.backend.getUrl('/_admin/'),
+		type: 'POST',
+		processData: false,
+		data: $matrix.util.getCommandXML('get translations'),
+		contentType: "text/xml",
+		dataType: 'xml',
+		error: function (XMLHttpRequest, textStatus, errorThrown) {
+			console.log(XMLHttpRequest, textStatus, errorThrown);
+		},
+		success: function(xml) {
+			var info = {};
+			var $translations = $(xml).find('translations');
+
+			$.each($translations.text().split("\n"), function(i, trans) {
+				if (!trans) return;
+				var bits = trans.match(/([^=]+[^ ]) *= *([^ ]*.*)/);
+				if (bits && bits.length)
+					info[bits[1]] = bits[2];
+			});
+
+			$matrix.util.translationData[$translations.attr('locale')] = info;
+
+			callback && callback();
+		}
+	});
+};
+
+
+var initialiseAssets = function initialiseAssets(callback) {
 	$.ajax({
 		url: $matrix.backend.getUrl('/_admin/'),
 		type: 'POST',
@@ -603,11 +717,26 @@ console.log('TODO figure out what previous child option does');
 			$.contextMenu({
 				selector: $map.menus['asset'],
 				trigger: 'right',
+				events: {
+					show: function(options) { // override the default
+// TODO keep this consistent - make target a reference to jquery
+						// store the node that was clicked
+						options.$target = this;
+					}
+				},
 				build: function($trigger, e) {
-console.log('building menu', arguments);
+//console.log('building menu', arguments);
+					var asset = $trigger.find('a.asset_name');
+					var items = $map.menuItems[asset.attr('type_code')];
+//console.log('items', items);
 					return {
-						callback: $.noop,
-						items: {}
+						callback: function(key, options) {
+							var screenUrl = $matrix.backend.getScreenUrl(key, asset);
+console.log('opening', screenUrl);
+							// see AssetMap.java:74
+							parent.frames['sq_main'].location = screenUrl;
+						},
+						items: items
 					}
 				}
 			});
@@ -729,42 +858,56 @@ var get_children = function get_children(host_url, xml_get, parent, current_asse
 		success: function(xml) {
 			// Remove loading
 			$('.loading').remove();
+
+			// this is to control how we deal with the different values when we attach them to the dom
+			var handlers = {
+				integer: function(input) { return parseInt(input, 10); },
+				string: function(input) { return unescape(input.replace(/\+/g, ' ')); },
+				'default': function(input) { return input; }
+			};
+			var fields = {
+				link_type: handlers.integer,
+				num_kids: handlers.integer,
+				sort_order: handlers.integer,
+				assetid: handlers.string,
+				type_code: handlers.string,
+				name: handlers.string,
+				url: handlers.string
+			};
+
+			var getField = function(asset, fieldName) {
+				return fields[fieldName] ? fields[fieldName](asset.attr(fieldName)) : asset.attr(fieldName);
+			}
+
 			// Check each asset that we find
 			$(xml).find('asset').each(function() {
-//console.log('asset', this);
-				// Only include asset tags with attributes
-				if ($(this).attr('assetid') > 0) {
-					// if we know our parent, let's record that
-					$(this).attr('parentid', current_asset ? current_asset.attr('assetid') : '1');
-					// Set some of our vars that will populate our asset map
-					var asset_id = unescape($(this).attr('assetid'));
-					var asset_link_type = parseInt($(this).attr('link_type'));
-					var asset_type_code = $(this).attr('type_code');
-					var asset_num_kids = parseInt($(this).attr('num_kids'));
-					var asset_name = unescape($(this).attr('name')).replace(/\+/g, ' ');
+				var $asset = $(this);
 
-					var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+				if ($asset.get(0).attributes.length) {
+					// if we know our parent, let's record that
+					$asset.attr('parentid', current_asset ? current_asset.attr('assetid') : '1');
+
+					var asset_image = '<img class="asset_image" src="/__data/asset_types/' + getField($asset, 'type_code') + '/icon.png" />';
 
 					// is this a hidden asset?
-					if (asset_link_type === 2) {
+					if (getField($asset, 'link_type') === 2) {
 						// Type 2 link
 						asset_image = type_2_image + asset_image;
 					}
 
 					var info = $('<li></li>')
-						.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
+						.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + getField($asset, 'assetid') + '" href="#" class="asset_name">' + getField($asset, 'name') + '</a>')
 						.appendTo(target)
 						// See if we have kids
-						.addClass(asset_num_kids > 0 ? 'kids_closed' : '')
-						.addClass('asset') // the following classes are used for menu control (menus are based on selectors)
-						.addClass('asset-type-' + asset_type_code)
+						.addClass(getField($asset, 'num_kids') > 0 ? 'kids_closed' : '')
+						.addClass('asset') // used for menu control (menus are based on selectors)
 						.children('a:last');
 
 					// add our info
-					// TODO this is bad, should consider using prop or data instead
+					// TODO this is bad, should consider using prop or data instead to store the values
 					// see http://api.jquery.com/prop/
 					$.each(this.attributes, function(i, attr) {
-						info.attr(attr.name, attr.value.replace(/^asset_/, ''));
+						info.attr(attr.name, getField($asset, attr.name));
 					});
 				}// End if
 
@@ -773,14 +916,12 @@ var get_children = function get_children(host_url, xml_get, parent, current_asse
 			// Set our first/last class
 			$('ul li:first-child').addClass('first');
 			$('ul li:last-child').addClass('last');
-
-			// disable this context menu
-//			$($map.selector + ' li').contextMenu(false);
 		}// End success
 
 	});// End ajax
 
 }
+
 
 var expand = function expand(current_asset, sub_root) {
 
@@ -796,6 +937,7 @@ var expand = function expand(current_asset, sub_root) {
 	}// End else
 
 }// End expand
+
 
 $.fn.assetMapHandler = function() {
 	return {
@@ -844,17 +986,13 @@ $.fn.matrixMap = function (options) {
 	// TODO keep a reference to all maps
 	$.fn.matrixMaps = [obj];
 
-	// Find out what site we are at
-/*
-	var proto = location.protocol;
-	var site = location.host;
-	var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
-*/
-
 	// Create our element
 	obj.append('<ul id="map_root"></ul>');
 
-	initialise(function() {load_root(defaults.root);});
+	initialise(function() {
+		buildContextMenus();
+		load_root(defaults.root);
+	});
 
 	// Lets double click our parents to show their children
 	$(document).on('dblclick', $map.selector + ' li a', function() {
@@ -863,12 +1001,9 @@ $.fn.matrixMap = function (options) {
 		sub_root = $(this).attr('id').replace('a', '');
 
 		// Build our tree
-		parent = false;
-		get_children($matrix.backend.getUrl(), null, parent, current_asset, sub_root);
-//		get_children(host_url, xml_get, parent, current_asset, sub_root);
+		get_children($matrix.backend.getUrl(), null, false, current_asset, sub_root);
 
 		return false;
-
 	});// End live dblclick
 
 	// this is to handle a selection target (move/link/clone etc)
@@ -904,7 +1039,8 @@ console.log($map.selector + ' li', $map.mode.current);
 
 	// Bind when user clicks on asset text
 	$(document).on('click', $map.selector + ' li a.asset_name', function() {
-		// this fires before the context menu handler
+		// this fires before the context menu handler because we're stacked above
+		// the menu trigger
 console.log($map.selector + ' li a.asset_name', $map.mode.current);
 
 		// TODO decide to show the menu or not
@@ -946,15 +1082,9 @@ console.log('target', this);
 	});//end keyup
 
 
-	// ### Custom Functions ###
-
-	function debug(msg) {
-		if (defaults.debug) {
-			console.log(msg);
-		}
-	}//end debug
 
 };// End matrixMap
+
 
 // see http://stackoverflow.com/questions/1720320/how-to-dynamically-create-css-class-in-javascript-and-apply
 function _createCSSRule(selector, style) {
@@ -1030,5 +1160,6 @@ function _createCSSRule(selector, style) {
     }
 }
 
+console.log(jQuery.fn.jquery);
 
 })(jQuery);
