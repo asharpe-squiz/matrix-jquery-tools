@@ -481,12 +481,15 @@ $matrix.util = {
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
+	// see http://forum.jquery.com/topic/adding-xml-nodes-to-an-xmldocument-with-jquery-1-5
 	getCommand: function getCommand(action, params, children) {
-		var ret = $('<command action="' + action + '"/>');
+		var xml = $.parseXML('<command/>');
+		var $xml = $(xml).find('command').attr('action', action);
+
 		if (params) {
 			for (var param in params) {
 				if (!params.hasOwnProperty(param)) continue;
-				ret.attr(param, params[param]);
+				$xml.attr(param, params[param]);
 			}
 		}
 		switch (action) {
@@ -495,10 +498,11 @@ $matrix.util = {
 			case 'new link':
 				children = children || [];
 				for (var i = 0; i < children.length; i++) {
-					var asset = $('<asset/>').appendTo(ret);
+					var $asset = $(xml.createElement('asset')).appendTo($xml);
+
 					for (var param in children[i]) {
 						if (!children[i].hasOwnProperty(param)) continue;
-						asset.attr(param, children[i][param]);
+						$asset.attr(param, children[i][param]);
 					}
 				}
 			break;
@@ -507,13 +511,15 @@ $matrix.util = {
 				console.log('Doing nothing for command', arguments);
 			break;
 		}
-		return ret;
+		return $xml;
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
 	getCommandXML: function getCommandXML(action, params, children) {
-		return $matrix.util.getCommand(action, params, children)
-			.wrap('<p/>').parent().html();
+		var command = $matrix.util.getCommand(action, params, children).get(0);
+
+		// see http://joncom.be/code/javascript-xml-conversion/
+		return window.ActiveXObject ? command.xml : (new XMLSerializer()).serializeToString(command);
 	},
 	getIconUrl: function getIconUrl(assetType) {
 		return $matrix.backend.getUrl('/__data/asset_types/' + assetType + '/icon.png');

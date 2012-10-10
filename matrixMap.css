@@ -17,7 +17,8 @@
 #map_root a:visited {outline-style: none;}
 
 /* Tree */
-#map_root {width: 400px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}
+/*#map_root {width: 400px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}*/
+#map_root {overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}
 #map_root li a {color: #000; font-size: .9em; line-height: 12px; height: 14px;}
 #map_root li a:hover {color: #000;}
 #map_root li img {margin-bottom: 0;}
@@ -30,7 +31,7 @@
 #map_root li {display: block; line-height: 18px; padding: 0 0 0 14px; background: url(/__lib/web/images/tree/stalk.gif) no-repeat -5px 0; clear: both; height: 16px;}
 #map_root li.closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px 0;}
 #map_root li.kids_closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px;}
-#map_root li.last {background: url(/__lib/web/images/tree/branch.gif) no-repeat -5px -3;}
+#map_root li.last {background: url(/__lib/web/images/tree/branch.gif) no-repeat scroll -5px -3px transparent;}
 #map_root ul.loading li {background: url(/__lib/web/images/icons/asset_map/loading_node.png) no-repeat 0 0;}
 #map_root li.cache {background: url(/__lib/web/images/tree/branch_open.gif) no-repeat -5px -2px;}
 #map_root li.cache.closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px;}
