@@ -224,7 +224,7 @@ $.fn.matrix = {
 	map: {
 		// TODO supply these from PHP
 		params: {
-			refreshInterval: 2000, // milliseconds
+			refreshInterval: 500, // milliseconds
 			adminSuffix: '_admin/', // don't fuck this up, xhr doesn't follow redirects
 			fetchLimit: 150
 		},
@@ -251,11 +251,10 @@ $.fn.matrix = {
 		// called when selecting something in the map
 		// TODO this can be much more efficient
 		select: function() {
-			if (this in $map.selected) {
+			if ($.inArray(this, $map.selected) !== -1) {
 console.log('already selected', this);
 				return;
 			}
-console.log('selecting', this);
 
 			// add this item
 			$map.selected.push(this);
@@ -511,12 +510,12 @@ $matrix.util = {
 				console.log('Doing nothing for command', arguments);
 			break;
 		}
-		return $xml;
+		return xml;
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
 	getCommandXML: function getCommandXML(action, params, children) {
-		var command = $matrix.util.getCommand(action, params, children).get(0);
+		var command = $matrix.util.getCommand(action, params, children);
 
 		// see http://joncom.be/code/javascript-xml-conversion/
 		return window.ActiveXObject ? command.xml : (new XMLSerializer()).serializeToString(command);
@@ -818,35 +817,22 @@ console.log('callback.target', options.target);
 	});// End ajax
 }
 
+
 var refreshAssets = function refreshAssets(assetids) {
 	// get the asset
 	var $assets = $('[assetid=' + assetids.join('],[assetid=') + ']', $map.selector);
-console.log('refreshing', $assets);
-
-	// an array of asset objects
-	var args = [];
 
 	$assets.each(function(i, asset) {
-		$.each(asset.getAttribute('linkid').split('|'), function(i, linkid) {
-			args.push({
-				assetid: asset.getAttribute('assetid'),
-				start: 0,
-				limit: $map.params.fetchLimit,
-				linkid: linkid
-			});
-		});
+		var $asset = $(asset);
+		$asset.parent().removeClass('cache');
+		expand($asset);
+		get_children(null, false, $asset, $asset.attr('assetid'), true);
 	});
-
-console.log('args', args);
 }
+
 
 var load_root = function load_root(assetid) {
 	var current_asset, parent = true;
-
-	// Find out what site we are at
-	var proto = location.protocol;
-	var site = location.host;
-	var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
 
 	// Construct our XML to send
 	var xml_get = $matrix.util.getCommandXML('get assets', {}, [{
@@ -861,9 +847,13 @@ var load_root = function load_root(assetid) {
 
 }
 
-var get_children = function get_children(xml_get, parent, current_asset, sub_root) {
+
+var get_children = function get_children(xml_get, parent, current_asset, sub_root, replace) {
 	// What do we add it to?
-	var target = $map.selector;
+	var $target = $($map.selector);
+
+	// are we replacing the contents?
+	replace = replace || false;
 
 	if (!parent) {
 		// If we have already expanded the children we don't want to load the tree again
@@ -882,12 +872,6 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 		// Don't expand if we have no kids
 		if (!current_asset.parent().hasClass('kids_closed')) return;
 
-		// Create a new list
-		current_asset.parent().after('<ul></ul>');
-
-		// What do we add it to?
-		target = current_asset.parent().next();
-
 		// Construct our XML to send
 		xml_get = $matrix.util.getCommandXML('get assets', {}, [{
 			assetid: sub_root,
@@ -898,12 +882,13 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 
 		// Check if we need to even get kids
 		expand(current_asset, sub_root);
-
 	}
 
 	// Set somes image vars
 	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
 	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
+
+	var cls = 'loading' + String(Math.random()).replace(/^0\./, '');
 
 	// Create our ajax to send the XML
 	$.ajax({
@@ -918,18 +903,33 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 		},
 		beforeSend: function () {
 			if (!parent) {
-				current_asset.parent().after('<ul class="loading"><li>Loading...</li></ul>');
+				current_asset.parent().append($('<img class="' + cls + '" src="/dev/325.1.gif" width="12" height="12"></img>'))
 			}
 		},
 		success: function(xml) {
-			// Remove loading
-			$('.loading').remove();
+//console.log('loaded', $(xml));
+//console.log('target', target);
+
+			if (replace) {
+				current_asset
+					.parent()
+						.nextAll('ul[parent=' + current_asset.attr('assetid') + ']')
+							.remove();
+
+			}
+
+			// (re)build the list
+			if (replace || !parent) {
+				$target = $('<ul/>')
+					.attr('parent', current_asset.attr('assetid'))
+					.insertAfter(current_asset.parent());
+			}
 
 			// this is to control how we deal with the different values when we attach them to the dom
 			var handlers = {
-				integer: function(input) {return parseInt(input, 10);},
-				string: function(input) {return unescape(input.replace(/\+/g, ' '));},
-				'default': function(input) {return input;}
+				integer: function(input) { return parseInt(input, 10); },
+				string: function(input) { return unescape(input.replace(/\+/g, ' ')); },
+				'default': function(input) { return input; }
 			};
 			var fields = {
 				link_type: handlers.integer,
@@ -950,7 +950,7 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 				var $asset = $(this);
 
 				if ($asset.get(0).attributes.length) {
-					// if we know our parent, let's record that
+					// record our parent
 					$asset.attr('parentid', current_asset ? current_asset.attr('assetid') : '1');
 
 					var asset_image = '<img class="asset_image" src="/__data/asset_types/' + getField($asset, 'type_code') + '/icon.png" />';
@@ -963,7 +963,7 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 
 					var info = $('<li></li>')
 						.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + getField($asset, 'assetid') + '" href="#" class="asset_name">' + getField($asset, 'name') + '</a>')
-						.appendTo(target)
+						.appendTo($target)
 						// See if we have kids
 						.addClass(getField($asset, 'num_kids') > 0 ? 'kids_closed' : '')
 						.addClass('asset') // used for menu control (menus are based on selectors)
@@ -980,16 +980,19 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 			});// End each
 
 			// Set our first/last class
-			$('ul li:first-child').addClass('first');
-			$('ul li:last-child').addClass('last');
-		}// End success
+			$('li:first-child', $target).addClass('first');
+			$('li:last-child', $target).addClass('last');
 
-	});// End ajax
+			// Remove loading indicator
+			$('.' + cls).remove();
+		}
+
+	});
 
 }
 
 
-var expand = function expand(current_asset, sub_root) {
+var expand = function expand(current_asset) {
 
 	// Check to see if we already have a class
 	if (current_asset.hasClass('children')) {
@@ -1000,9 +1003,8 @@ var expand = function expand(current_asset, sub_root) {
 		current_asset.addClass('children');
 		// Let it know that we have expanded so we don't have to load again
 		current_asset.parent('li').addClass('cache');
-	}// End else
-
-}// End expand
+	}
+}
 
 
 $.fn.assetMapHandler = function() {
@@ -1085,7 +1087,7 @@ $.fn.matrixMap = function (options) {
 
 	// this is to handle a selection target (move/link/clone etc)
 	$(document).on('click', $map.selector + ' li', function() {
-console.log($map.selector + ' li', $map.mode.current);
+//console.log($map.selector + ' li', $map.mode.current);
 
 		switch ($map.mode.current) {
 			case MODE_USEME:
@@ -1144,13 +1146,12 @@ console.log('clicked a.asset_name while in select mode');
 
 	// Bind when user clicks icon to invoke a map mode
 	$(document).on('click', $map.selector + ' a.icon_hold', function(event) {
-console.log('clicked name while in mode ' + $map.mode.current);
+//console.log($map.selector + ' a.icon_hold', $map.mode.current);
 
 		switch ($map.mode.current) {
 			case MODE_SELECT:
 				// I don't believe we get here, the context menu handler
 				// has already eaten the event, which is OK
-console.log('clicked a.icon_hold while in select mode');
 console.log('selected', $map.selected);
 console.log('target', this);
 			break;
