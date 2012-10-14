@@ -226,7 +226,8 @@ $.fn.matrix = {
 		params: {
 			refreshInterval: 500, // milliseconds
 			adminSuffix: '_admin/', // don't fuck this up, xhr doesn't follow redirects
-			fetchLimit: 150
+			fetchLimit: 150,
+			lib: '__lib'
 		},
 		// TODO get this from elsewhere
 		locale: 'en_AU',
@@ -286,6 +287,7 @@ console.log('already selected', this);
 		menuItems: {},
 		// store the selectors for the different menus to accurately enable/disable
 		menus: {},
+		// see AssetMap.java:246
 		checkRefresh: function checkRefresh() {
 			// TODO we could be anal and check for a string.. meh
 			if (SQ_REFRESH_ASSETIDS) {
@@ -382,8 +384,9 @@ console.log('asset', asset);
 		},
 		// see MatrixTreeComm:61
 		createAsset: function(type, parentId, parentPosition) {
-			parentPosition = parentPosition || 0;
-			
+			// see MatrixTree.java:1596:1689 for the -1 option
+			parentPosition = parentPosition || -1;
+
 			// <command action="get url" cmd="add" parent_assetid="1" pos="6" type_code="folder" />
 
 			$.ajax({
@@ -583,13 +586,73 @@ console.log('translating', arguments);
 };
 
 
+// this decouples the ajax requests from the operations to process their
+// data, allowing other means to initialise the asset map
 var initialise = function initialise(callback) {
-	initialiseTranslations(function() {
-		initialiseAssets(callback);
+//	initialiseTranslations(function() {
+//		initialiseAssetTypes(callback);
+//	});
+	$.ajax({
+		url: $matrix.backend.getUrl($map.params.adminSuffix),
+		type: 'POST',
+		processData: false,
+		data: $matrix.util.getCommandXML('get translations'),
+		contentType: "text/xml",
+		dataType: 'xml',
+		error: function (XMLHttpRequest, textStatus, errorThrown) {
+			console.log(XMLHttpRequest, textStatus, errorThrown);
+		},
+		success: function(xml) {
+			initialiseTranslation($(xml).find('translations'));
+//			initialiseAssetTypes($(xml).find('types'));
+		},
+		complete: function() {
+			$.ajax({
+				url: $matrix.backend.getUrl($map.params.adminSuffix),
+				type: 'POST',
+				processData: false,
+				data: $matrix.util.getCommandXML('initialise'),
+				contentType: "text/xml",
+				dataType: 'xml',
+				error: function (XMLHttpRequest, textStatus, errorThrown) {
+					console.log(XMLHttpRequest, textStatus, errorThrown);
+				},
+				success: function(xml) {
+init = $(xml);
+//console.log(init);
+
+					initialiseAssetTypes($(xml).find('asset_types'));
+					buildBranch($($map.selector), $(xml).find('assets'));
+				},
+				complete: function() {
+					// now do whatever we were asked to do next
+					// TODO there might not be much point to this if this request failed
+					callback && callback();
+				}
+			});
+		}
 	});
+
 };
 
 
+// TODO this SHOULD BE a method of the map
+var initialiseTranslation = function initialiseTranslation($xml) {
+	var info = {};
+
+	$.each($xml.text().split("\n"), function(i, trans) {
+		if (!trans) return;
+		// TODO I think this can be made a bit better...
+		// though it needs discussion with core devs and translation maintainers
+		var bits = trans.match(/([^=]+[^ ]) *= *([^ ]*.*)/);
+		if (bits && bits.length)
+			info[bits[1]] = bits[2];
+	});
+
+	$matrix.util.translationData[$xml.attr('locale')] = info;
+}
+
+/*
 var initialiseTranslations = function initialiseTranslations(callback) {
 	$.ajax({
 		url: $matrix.backend.getUrl($map.params.adminSuffix),
@@ -618,9 +681,10 @@ var initialiseTranslations = function initialiseTranslations(callback) {
 		}
 	});
 };
+*/
 
-
-var initialiseAssets = function initialiseAssets(callback) {
+/*
+var initialiseAssetTypes = function initialiseAssetTypes(callback) {
 	$.ajax({
 		url: $matrix.backend.getUrl($map.params.adminSuffix),
 		type: 'POST',
@@ -632,8 +696,8 @@ var initialiseAssets = function initialiseAssets(callback) {
 			console.log(XMLHttpRequest, textStatus, errorThrown);
 		},
 		success: function(xml) {
-init = $(xml);
-//console.log(init);
+*/
+var initialiseAssetTypes = function initialiseAssetTypes($xml) {
 			var items = {};
 
 			// an array of type names for sorting
@@ -643,27 +707,24 @@ init = $(xml);
 
 			// We need to order the types by their type_codes
 			// see MatrixMenus.java:369
-			
+
 			// handle the action of a new asset
 			var newAssetCallback = function(key, options) {
+				// default add to tree root
 				var parentId = '1';
+				var $this = $(this);
 
-				// TODO we need a decent way to check if we're triggered by the
-				// map root or from an asset in the tree
-				// TODO would be better to use options.$trigger all the way
-				// see also the build method where this menu is constructed
-				if ($map.selected) {
-					parentId = options.$trigger.find('a.asset_name').attr('assetid');
+				// we clicked on an asset
+				if ($this.children('a.asset_name').length) {
+					parentId = $this.children('a.asset_name').attr('assetid');
 				}
-			
-console.log('newAssetCallback', arguments);
 
 				// if options.$trigger is not a jquery then we're adding to the tree root
 				$matrix.backend.createAsset(key, parentId/*, parentPosition*/);
 			}
 
 			// Check each type that we find
-			$(xml).find('type').each(function() {
+			$xml.find('type').each(function() {
 				var $this = $(this);
 
 				var path = $this.attr('flash_menu_path');
@@ -826,33 +887,21 @@ console.log('TODO figure out what previous child option does');
 			$.contextMenu({
 				selector: $map.menus['asset'],
 				trigger: 'right',
-				events: {
-					hide: function(options) {
-console.log('hiding', arguments);
-					}
-				},
+//				events: {
+//					hide: function(options) {
+//console.log('hiding', arguments);
+//					}
+//				},
 				build: function($trigger, e) {
 					var $asset = $trigger.children('a.asset_name');
 					var items = $map.menuItems[$asset.attr('type_code')];
-					
-					// select the asset so we can check later if we're "Doing it right"
-					if ($asset.length) {
-console.log($asset);
-						$map.select($asset.get(0));
-					}
-					
+
 					return {
-						// this is consistent with our global "show" handler
-						// unfortunately it doesn't work and we need to override
-						// the trigger property
-						target: $trigger,
-						trigger: $trigger,
-						asset: $asset,
+						// requests for new children SHOULD BE handled automatically
+						// we're just handling the first level of the menu (asset screens)
 						callback: function(key, options) {
 							var screenUrl = $matrix.backend.getScreenUrl(key, $asset);
-							
-							// requests for new children will be handled automatically
-							// we're just handling the first level of the menu (asset screens)
+
 							$matrix.util.changeMain(screenUrl);
 						},
 						items: items
@@ -868,31 +917,105 @@ console.log($asset);
 				trigger: 'right',
 				callback: function(key, options) {
 					console.log(arguments);
-					
+
 					// TODO this should go into a useme type state
 					// and allow selecting the parent of the new asset
+					// see MatrixTree.java:1332
 
-					if (!options.target) {
-						// create a new asset at the root
-						// TODO work out where this asset is being added
-						$matrix.backend.createAsset(key, 1 /*, TODO undefined*/);
-					}
-					else {
-console.log('received a target for the main menu', options.target, arguments);
-					}
+					// create a new asset at the root
+					// TODO work out where this asset is being added
+					$matrix.backend.createAsset(key, 1 /*, TODO undefined*/);
 				},
 				items: items
 			});
 
 			// play on ;)
-			callback && callback();
-		}// End success
+//			callback && callback();
 
+		}// End success
+/*
 	});// End ajax
+}
+*/
+
+
+// Given some XML describing a level of the tree, construct the contents of that
+// branch
+// TODO neeed the following vars
+//	current_asset
+//	getField()
+//	type_2_image - some prefix for special image contents
+//	$target - effectively our return value where we've build the tree
+var buildBranch = function buildBranch($root, $xml) {
+	// Set somes image vars
+	var type_2_path = $matrix.backend.getUrl($map.params.lib + '/web/images/icons/asset_map/not_visible.png');
+	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
+
+	// this is to control how we deal with the different values when we attach them to the dom
+	var handlers = {
+		integer: function(input) { return parseInt(input, 10); },
+		string: function(input) { return unescape(input.replace(/\+/g, ' ')); },
+		'default': function(input) { return input; }
+	};
+
+	// these are the fields we know about
+	var fields = {
+		link_type: handlers.integer,
+		num_kids: handlers.integer,
+		sort_order: handlers.integer,
+		assetid: handlers.string,
+		type_code: handlers.string,
+		name: handlers.string,
+		url: handlers.string
+	};
+
+	// handy translator for field values
+	var getField = function(asset, fieldName) {
+		return fields[fieldName] ? fields[fieldName](asset.attr(fieldName)) : asset.attr(fieldName);
+	}
+
+	// Check each asset that we find
+	$xml.find('asset').each(function() {
+		var $asset = $(this);
+
+		if ($asset.get(0).attributes.length) {
+			// record our parent
+			$asset.attr('parentid', $root.attr('assetid'));
+
+			var asset_image = '<img class="asset_image" src="/__data/asset_types/' + getField($asset, 'type_code') + '/icon.png" />';
+
+			// is this a hidden asset?
+			if (getField($asset, 'link_type') === 2) {
+				// Type 2 link
+				asset_image = type_2_image + asset_image;
+			}
+
+			var info = $('<li></li>')
+				.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + getField($asset, 'assetid') + '" href="#" class="asset_name">' + getField($asset, 'name') + '</a>')
+				.appendTo($root)
+				// See if we have kids
+				.addClass(getField($asset, 'num_kids') > 0 ? 'kids_closed' : '')
+				.addClass('asset') // used for menu control (menus are based on selectors)
+				.children('a:last');
+
+			// add our info
+			// TODO this is bad, should consider using prop or data instead to store the values
+			// see http://api.jquery.com/prop/
+			$.each(this.attributes, function(i, attr) {
+				info.attr(attr.name, getField($asset, attr.name));
+			});
+		}// End if
+
+	});// End each
+
+	// Set our first/last class
+	$('li:first-child', $root).addClass('first');
+	$('li:last-child', $root).addClass('last');
 }
 
 
 var refreshAssets = function refreshAssets(assetids) {
+console.log('refreshAssets', arguments);
 	// we're doing this so if the root is being refreshed
 	// we hit it first and forget the others
 	// TODO this will need to change when we're selectively updating
@@ -906,7 +1029,7 @@ var refreshAssets = function refreshAssets(assetids) {
 		load_root(1);
 		return;
 	}
-	
+
 	// get the asset
 	var $assets = $('[assetid=' + assetids.join('],[assetid=') + ']', $map.selector);
 console.log('refreshing', assetids, $assets);
@@ -914,7 +1037,7 @@ console.log('refreshing', assetids, $assets);
 	$assets.each(function(i, asset) {
 		var $asset = $(asset);
 		$asset.parent().removeClass('cache');
-		expand($asset);
+//		expand($asset);
 		get_children(null, false, $asset, $asset.attr('assetid'), true);
 	});
 }
@@ -973,10 +1096,6 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 		expand(current_asset, sub_root);
 	}
 
-	// Set somes image vars
-	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
-	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
-
 	var cls = 'loading' + String(Math.random()).replace(/^0\./, '');
 
 	// Create our ajax to send the XML
@@ -1014,26 +1133,8 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 					.insertAfter(current_asset.parent());
 			}
 
-			// this is to control how we deal with the different values when we attach them to the dom
-			var handlers = {
-				integer: function(input) { return parseInt(input, 10); },
-				string: function(input) { return unescape(input.replace(/\+/g, ' ')); },
-				'default': function(input) { return input; }
-			};
-			var fields = {
-				link_type: handlers.integer,
-				num_kids: handlers.integer,
-				sort_order: handlers.integer,
-				assetid: handlers.string,
-				type_code: handlers.string,
-				name: handlers.string,
-				url: handlers.string
-			};
-
-			var getField = function(asset, fieldName) {
-				return fields[fieldName] ? fields[fieldName](asset.attr(fieldName)) : asset.attr(fieldName);
-			}
-
+			buildBranch($target, $(xml));
+/*
 			// Check each asset that we find
 			$(xml).find('asset').each(function() {
 				var $asset = $(this);
@@ -1071,7 +1172,7 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 			// Set our first/last class
 			$('li:first-child', $target).addClass('first');
 			$('li:last-child', $target).addClass('last');
-
+*/
 			// Remove loading indicator
 			$('.' + cls).remove();
 		}
@@ -1144,27 +1245,31 @@ $.fn.matrixMap = function (options) {
 	};
 
 	options = $.extend(defaults, options);
-	var obj = $(this), current_asset, parent = true, sub_root, attr_stat, selected;
+	var obj = $(this);
 
 	// TODO keep a reference to all maps
 	$.fn.matrixMaps = [obj];
 
 	// Create our element
-	obj.append('<ul id="map_root"></ul>');
+	obj.append('<ul></ul>')
+		.attr({
+			id: 'map_root', // TODO externalise
+			assetid: options.root // this allows creation of a map at a root other than 1 (ie, user pref)
+		});
 
 	initialise(function() {
 		buildContextMenus();
-		load_root(defaults.root);
 
 		// TODO this needs to be triggered on an event when the asset map is ready
 		setTimeout($map.checkRefresh, 10000);
 	});
 
+
 	// Lets double click our parents to show their children
 	$(document).on('dblclick', $map.selector + ' li a', function() {
 		// Get our current asset
-		current_asset = $(this);
-		sub_root = $(this).attr('id').replace('a', '');
+		var current_asset = $(this);
+		var sub_root = $(this).attr('id').replace('a', '');
 
 		// Build our tree
 		get_children(null, false, current_asset, sub_root);
@@ -1287,8 +1392,6 @@ console.log('nothing selected', $map.selected);
 			break;
 		}
 	});//end keyup
-
-
 
 };// End matrixMap
 
