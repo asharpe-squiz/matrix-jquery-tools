@@ -379,6 +379,33 @@ console.log('asset', asset);
 		},
 		cloneAssets: function(assets, $target) {
 			$matrix.backend._handleAssets('clone', assets, $target);
+		},
+		// see MatrixTreeComm:61
+		createAsset: function(type, parentId, parentPosition) {
+			parentPosition = parentPosition || 0;
+			
+			// <command action="get url" cmd="add" parent_assetid="1" pos="6" type_code="folder" />
+
+			$.ajax({
+				url: $matrix.backend.getUrl($map.params.adminSuffix),
+				type: 'POST',
+				processData: false,
+				data: $matrix.util.getCommandXML('get url', {
+					parent_assetid: parentId,
+					pos: parentPosition,
+					cmd: 'add',
+					type_code: type
+				}),
+				contentType: "text/xml",
+				dataType: 'xml',
+				error: function (XMLHttpRequest, textStatus, errorThrown) {
+					console.log(XMLHttpRequest, textStatus, errorThrown);
+				},
+				success: function(xml) {
+					var url = $(xml).find('url[frame=sq_main]').text();
+					url && $matrix.util.changeMain(url);
+				}
+			});
 		}
 	}
 };
@@ -478,6 +505,12 @@ $matrix.util = {
 		var cnt = $('span.asset_hold', $(this)).contents();
 		$('span.asset_hold', $(this)).replaceWith(cnt);
 	},
+	// change the contents of the main screen
+	// see AssetMap.java:74
+	changeMain: function (url) {
+console.log('opening', url);
+		window.parent.frames['sq_main'].location = url;
+	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
 	// see http://forum.jquery.com/topic/adding-xml-nodes-to-an-xmldocument-with-jquery-1-5
@@ -492,6 +525,7 @@ $matrix.util = {
 			}
 		}
 		switch (action) {
+			case 'get url':
 			case 'get assets':
 			case 'move asset':
 			case 'new link':
@@ -609,6 +643,24 @@ init = $(xml);
 
 			// We need to order the types by their type_codes
 			// see MatrixMenus.java:369
+			
+			// handle the action of a new asset
+			var newAssetCallback = function(key, options) {
+				var parentId = '1';
+
+				// TODO we need a decent way to check if we're triggered by the
+				// map root or from an asset in the tree
+				// TODO would be better to use options.$trigger all the way
+				// see also the build method where this menu is constructed
+				if ($map.selected) {
+					parentId = options.$trigger.find('a.asset_name').attr('assetid');
+				}
+			
+console.log('newAssetCallback', arguments);
+
+				// if options.$trigger is not a jquery then we're adding to the tree root
+				$matrix.backend.createAsset(key, parentId/*, parentPosition*/);
+			}
 
 			// Check each type that we find
 			$(xml).find('type').each(function() {
@@ -649,7 +701,8 @@ init = $(xml);
 						name: unescape($this.attr('name')),
 						// TODO need to use the generic icon when this fails
 						icon: type,
-						info: $this
+						info: $this,
+						callback: newAssetCallback
 					};
 					// info for sorting
 					subTypes[path].push(unescape($this.attr('name')));
@@ -722,7 +775,8 @@ console.log(type, longest);
 			items['sep'] = '-';
 			items['folder'] = {
 				name: 'Folder',
-				icon: 'folder'
+				icon: 'folder',
+				callback: newAssetCallback
 			};
 			items['order'].push('sep');
 			items['order'].push('folder');
@@ -773,39 +827,59 @@ console.log('TODO figure out what previous child option does');
 				selector: $map.menus['asset'],
 				trigger: 'right',
 				events: {
-					show: function(options) { // override the default
-// TODO keep this consistent - make target a reference to jquery
-						// store the node that was clicked
-						options.$target = this;
+					hide: function(options) {
+console.log('hiding', arguments);
 					}
 				},
 				build: function($trigger, e) {
-					var asset = $trigger.find('a.asset_name');
-					var items = $map.menuItems[asset.attr('type_code')];
+					var $asset = $trigger.children('a.asset_name');
+					var items = $map.menuItems[$asset.attr('type_code')];
+					
+					// select the asset so we can check later if we're "Doing it right"
+					if ($asset.length) {
+console.log($asset);
+						$map.select($asset.get(0));
+					}
+					
 					return {
+						// this is consistent with our global "show" handler
+						// unfortunately it doesn't work and we need to override
+						// the trigger property
+						target: $trigger,
+						trigger: $trigger,
+						asset: $asset,
 						callback: function(key, options) {
-							var screenUrl = $matrix.backend.getScreenUrl(key, asset);
-console.log('opening', screenUrl);
-							// see AssetMap.java:74
-							parent.frames['sq_main'].location = screenUrl;
+							var screenUrl = $matrix.backend.getScreenUrl(key, $asset);
+							
+							// requests for new children will be handled automatically
+							// we're just handling the first level of the menu (asset screens)
+							$matrix.util.changeMain(screenUrl);
 						},
 						items: items
 					}
 				}
 			});
 
-
-console.log('$map.menus', $map.menus);
+//console.log('$map.menus', $map.menus);
 
 			$map.menus['main'] = $map.selector;
 			$.contextMenu({
 				selector: $map.menus['main'],
 				trigger: 'right',
 				callback: function(key, options) {
-					var m = "clicked: " + key;
-window.console ? console.log(m) : alert(m);
-console.log('callback.this', this);
-console.log('callback.target', options.target);
+					console.log(arguments);
+					
+					// TODO this should go into a useme type state
+					// and allow selecting the parent of the new asset
+
+					if (!options.target) {
+						// create a new asset at the root
+						// TODO work out where this asset is being added
+						$matrix.backend.createAsset(key, 1 /*, TODO undefined*/);
+					}
+					else {
+console.log('received a target for the main menu', options.target, arguments);
+					}
 				},
 				items: items
 			});
@@ -819,8 +893,23 @@ console.log('callback.target', options.target);
 
 
 var refreshAssets = function refreshAssets(assetids) {
+	// we're doing this so if the root is being refreshed
+	// we hit it first and forget the others
+	// TODO this will need to change when we're selectively updating
+	// the tree - at the moment we do a wholesale replace
+	assetids.sort();
+
+	// the root asset needs special handling
+	if (assetids[0] == '1') {
+		// TODO notification
+		$($map.selector).empty();
+		load_root(1);
+		return;
+	}
+	
 	// get the asset
 	var $assets = $('[assetid=' + assetids.join('],[assetid=') + ']', $map.selector);
+console.log('refreshing', assetids, $assets);
 
 	$assets.each(function(i, asset) {
 		var $asset = $(asset);
