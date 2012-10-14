@@ -42,7 +42,7 @@ var init;
 //var SQ_DOCUMENT_LOADED = false;
 
 
-(function ($) {
+(function ($, undefined) {
 
 // constants
 STATUS_CONSTRUCTION = '2';
@@ -231,7 +231,10 @@ $.fn.matrix = {
 		},
 		// TODO get this from elsewhere
 		locale: 'en_AU',
-		selector: '#map_root',
+		_id: 'map_root',
+		// this is the CSS selector using the map._id
+//		selector: '#map_root',
+		selector: undefined,
 		mode: {
 			current: MODE_NORMAL,
 			// TODO we're passing the scope on here, so we'd better some up with
@@ -415,6 +418,9 @@ console.log('asset', asset);
 
 $matrix = $.fn.matrix;
 $map = $matrix.map;
+
+// set the selector
+$map.selector = '#' + $map._id;
 
 // attach mode handlers here because JS doesn't evaluate the LHS of an object property
 // TODO document the context these methods are triggered in
@@ -1234,6 +1240,8 @@ console.log('with', this.target);
 * Plugin that allows you to browse the MySource Matrix asset tree structure.
 * This is beneficial sometimes as you can bypass the java asset map.
 * It sends XML to Matrix, then receives an XML response.
+* TODO allow multiple maps, and set each map according to the jQuery selector
+* TODO define API to manipulate the map, especially an existing map
 *
 * @version $Revision: 0.1
 */
@@ -1251,9 +1259,10 @@ $.fn.matrixMap = function (options) {
 	$.fn.matrixMaps = [obj];
 
 	// Create our element
-	obj.append('<ul></ul>')
+	obj
+		.append('<ul></ul>')
 		.attr({
-			id: 'map_root', // TODO externalise
+			id: $map._id, // TODO allow multiple maps
 			assetid: options.root // this allows creation of a map at a root other than 1 (ie, user pref)
 		});
 
