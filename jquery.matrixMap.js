@@ -628,7 +628,7 @@ init = $(xml);
 //console.log(init);
 
 					initialiseAssetTypes($(xml).find('asset_types'));
-					buildBranch($($map.selector), $(xml).find('assets'));
+					buildBranch($($map.selector), $(xml).find('assets'), true);
 				},
 				complete: function() {
 					// now do whatever we were asked to do next
@@ -904,7 +904,10 @@ console.log('TODO figure out what previous child option does');
 //	getField()
 //	type_2_image - some prefix for special image contents
 //	$target - effectively our return value where we've build the tree
-var buildBranch = function buildBranch($root, $xml) {
+var buildBranch = function buildBranch($root, $xml, skip_root) {
+	// should we skip the root of the tree?
+	skip_root = skip_root || false;
+
 	// Set somes image vars
 	var type_2_path = $matrix.backend.getUrl($map.params.lib + '/web/images/icons/asset_map/not_visible.png');
 	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
@@ -936,7 +939,10 @@ var buildBranch = function buildBranch($root, $xml) {
 	$xml.find('asset').each(function() {
 		var $asset = $(this);
 
-		if ($asset.get(0).attributes.length) {
+		// should we skip the root?
+		if ($root.attr('assetid') == $(this).attr('assetid') && skip_root) return;
+
+		if (this.attributes.length) {
 			// record our parent
 			$asset.attr('parentid', $root.attr('assetid'));
 
