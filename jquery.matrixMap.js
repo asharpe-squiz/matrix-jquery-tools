@@ -658,291 +658,243 @@ var initialiseTranslation = function initialiseTranslation($xml) {
 	$matrix.util.translationData[$xml.attr('locale')] = info;
 }
 
-/*
-var initialiseTranslations = function initialiseTranslations(callback) {
-	$.ajax({
-		url: $matrix.backend.getUrl($map.params.adminSuffix),
-		type: 'POST',
-		processData: false,
-		data: $matrix.util.getCommandXML('get translations'),
-		contentType: "text/xml",
-		dataType: 'xml',
-		error: function (XMLHttpRequest, textStatus, errorThrown) {
-			console.log(XMLHttpRequest, textStatus, errorThrown);
-		},
-		success: function(xml) {
-			var info = {};
-			var $translations = $(xml).find('translations');
 
-			$.each($translations.text().split("\n"), function(i, trans) {
-				if (!trans) return;
-				var bits = trans.match(/([^=]+[^ ]) *= *([^ ]*.*)/);
-				if (bits && bits.length)
-					info[bits[1]] = bits[2];
-			});
-
-			$matrix.util.translationData[$translations.attr('locale')] = info;
-
-			callback && callback();
-		}
-	});
-};
-*/
-
-/*
-var initialiseAssetTypes = function initialiseAssetTypes(callback) {
-	$.ajax({
-		url: $matrix.backend.getUrl($map.params.adminSuffix),
-		type: 'POST',
-		processData: false,
-		data: $matrix.util.getCommandXML('initialise'),
-		contentType: "text/xml",
-		dataType: 'xml',
-		error: function (XMLHttpRequest, textStatus, errorThrown) {
-			console.log(XMLHttpRequest, textStatus, errorThrown);
-		},
-		success: function(xml) {
-*/
 var initialiseAssetTypes = function initialiseAssetTypes($xml) {
-			var items = {};
+	var items = {};
 
-			// an array of type names for sorting
-			var types = [];
-			// a map of arrays of type names for sorting
-			var subTypes = {};
+	// an array of type names for sorting
+	var types = [];
+	// a map of arrays of type names for sorting
+	var subTypes = {};
 
-			// We need to order the types by their type_codes
-			// see MatrixMenus.java:369
+	// We need to order the types by their type_codes
+	// see MatrixMenus.java:369
 
-			// handle the action of a new asset
-			var newAssetCallback = function(key, options) {
-				// default add to tree root
-				var parentId = '1';
-				var $this = $(this);
+	// handle the action of a new asset
+	var newAssetCallback = function(key, options) {
+		// default add to tree root
+		var parentId = '1';
+		var $this = $(this);
 
-				// we clicked on an asset
-				if ($this.children('a.asset_name').length) {
-					parentId = $this.children('a.asset_name').attr('assetid');
-				}
+		// we clicked on an asset
+		if ($this.children('a.asset_name').length) {
+			parentId = $this.children('a.asset_name').attr('assetid');
+		}
 
-				// if options.$trigger is not a jquery then we're adding to the tree root
-				$matrix.backend.createAsset(key, parentId/*, parentPosition*/);
+		// if options.$trigger is not a jquery then we're adding to the tree root
+		$matrix.backend.createAsset(key, parentId/*, parentPosition*/);
+	}
+
+	// Check each type that we find
+	$xml.find('type').each(function() {
+		var $this = $(this);
+
+		var path = $this.attr('flash_menu_path');
+		var type = $this.attr('type_code');
+
+		// get screens (context menu items)
+		// TODO order these
+		var m = $map.menuItems[$this.attr('type_code')] = {};
+		var mIndex = 0;
+		$this.find('screen').each(function() {
+			m[$(this).attr('code_name')] = {
+				name: $(this).text(),
+				index: mIndex++
+			}
+		});
+
+		// we skip if there's no path or it's not instantiable
+		// see AssetType.java:75
+		var instantiable = $this.attr('instantiable') === '1' || $this.attr('allowed_access') === 'system';
+
+		if (path && instantiable) {
+			if (!items[path]) {
+				items[path] = {
+					name: path,
+					icon: type, // takes the icon of the first type in this group
+					items: {}
+				};
+
+				// info for sorting
+				types.push(path);
+				subTypes[path] = [];
 			}
 
-			// Check each type that we find
-			$xml.find('type').each(function() {
-				var $this = $(this);
-
-				var path = $this.attr('flash_menu_path');
-				var type = $this.attr('type_code');
-
-				// get screens (context menu items)
-				// TODO order these
-				var m = $map.menuItems[$this.attr('type_code')] = {};
-				var mIndex = 0;
-				$this.find('screen').each(function() {
-					m[$(this).attr('code_name')] = {
-						name: $(this).text(),
-						index: mIndex++
-					}
-				});
-
-				// we skip if there's no path or it's not instantiable
-				// see AssetType.java:75
-				var instantiable = $this.attr('instantiable') === '1' || $this.attr('allowed_access') === 'system';
-
-				if (path && instantiable) {
-					if (!items[path]) {
-						items[path] = {
-							name: path,
-							icon: type, // takes the icon of the first type in this group
-							items: {}
-						};
-
-						// info for sorting
-						types.push(path);
-						subTypes[path] = [];
-					}
-
-					items[path]['items'][type] = {
-						name: unescape($this.attr('name')),
-						// TODO need to use the generic icon when this fails
-						icon: type,
-						info: $this,
-						callback: newAssetCallback
-					};
-					// info for sorting
-					subTypes[path].push(unescape($this.attr('name')));
-
-					// construct an icon style
-					$matrix.util.createCSSRule(type);
-				}
-
-			});// End each
-
-			// see http://stackoverflow.com/questions/8996963/how-to-perform-case-insensitive-sorting-in-javascript
-			var caseInsensitiveSort = function caseInsensitiveSort(a, b) {
-				if (a.toLowerCase() < b.toLowerCase()) return -1;
-				if (a.toLowerCase() > b.toLowerCase()) return 1;
-				return 0;
+			items[path]['items'][type] = {
+				name: unescape($this.attr('name')),
+				// TODO need to use the generic icon when this fails
+				icon: type,
+				info: $this,
+				callback: newAssetCallback
 			};
+			// info for sorting
+			subTypes[path].push(unescape($this.attr('name')));
 
-			types.sort(caseInsensitiveSort);
-			items['order'] = types;
+			// construct an icon style
+			$matrix.util.createCSSRule(type);
+		}
 
-			// ordering sucks!
-			// we need to order the submenus by name, however the menus
-			// are built using their keys to index them :-/
+	});// End each
 
-			// find a menu key given the menu and an items name
-			var findKey = function findKey(menu, itemName) {
-				for (var k in menu) {
-					if (!menu.hasOwnProperty(k)) continue;
+	// see http://stackoverflow.com/questions/8996963/how-to-perform-case-insensitive-sorting-in-javascript
+	var caseInsensitiveSort = function caseInsensitiveSort(a, b) {
+		if (a.toLowerCase() < b.toLowerCase()) return -1;
+		if (a.toLowerCase() > b.toLowerCase()) return 1;
+		return 0;
+	};
 
-					if (menu[k]['name'] === itemName) return k;
-				}
+	types.sort(caseInsensitiveSort);
+	items['order'] = types;
+
+	// ordering sucks!
+	// we need to order the submenus by name, however the menus
+	// are built using their keys to index them :-/
+
+	// find a menu key given the menu and an items name
+	var findKey = function findKey(menu, itemName) {
+		for (var k in menu) {
+			if (!menu.hasOwnProperty(k)) continue;
+
+			if (menu[k]['name'] === itemName) return k;
+		}
 
 //console.log('menu', menu);
 //console.log('itemName', itemName);
-				throw new Error('Cannot find menu item named "' + itemName + '"');
-			};
+		throw new Error('Cannot find menu item named "' + itemName + '"');
+	};
 
-			// sort the submenus
-			for (type in subTypes) {
-				if (!subTypes.hasOwnProperty(type)) continue;
+	// sort the submenus
+	for (type in subTypes) {
+		if (!subTypes.hasOwnProperty(type)) continue;
 
-				// order by name
-				subTypes[type].sort(caseInsensitiveSort);
+		// order by name
+		subTypes[type].sort(caseInsensitiveSort);
 
-				// now replace with the type_code
-				for (var i = 0, last = subTypes[type].length; i < last; i++) {
-					subTypes[type][i] = findKey(items[type]['items'], subTypes[type][i]);
-				}
+		// now replace with the type_code
+		for (var i = 0, last = subTypes[type].length; i < last; i++) {
+			subTypes[type][i] = findKey(items[type]['items'], subTypes[type][i]);
+		}
 
-				items[type]['items']['order'] = subTypes[type];
+		items[type]['items']['order'] = subTypes[type];
 
-				// see jquery.contextMenu.js:1130
-				// lame attempt at setting the width of the submenu
+		// see jquery.contextMenu.js:1130
+		// lame attempt at setting the width of the submenu
 /*
-				var longest = 0;
-				$(subTypes[type]).each(function(i, subType) {
-					if (items[type]['items'][String(subType)]['name'].length > longest) {
-						longest = items[type]['items'][String(subType)]['name'].length;
-					}
-				});
-				switch (true) {
-					case longest > 25: items[type]['className'] = 'wide'; break;
-					case longest > 15: items[type]['className'] = 'medium'; break;
-				}
+		var longest = 0;
+		$(subTypes[type]).each(function(i, subType) {
+			if (items[type]['items'][String(subType)]['name'].length > longest) {
+				longest = items[type]['items'][String(subType)]['name'].length;
+			}
+		});
+		switch (true) {
+			case longest > 25: items[type]['className'] = 'wide'; break;
+			case longest > 15: items[type]['className'] = 'medium'; break;
+		}
 console.log(type, longest);
 */
-			}
+	}
 
-			// whack a separator and folder on the end
-			items['sep'] = '-';
-			items['folder'] = {
-				name: 'Folder',
-				icon: 'folder',
-				callback: newAssetCallback
-			};
-			items['order'].push('sep');
-			items['order'].push('folder');
+	// whack a separator and folder on the end
+	items['sep'] = '-';
+	items['folder'] = {
+		name: 'Folder',
+		icon: 'folder',
+		callback: newAssetCallback
+	};
+	items['order'].push('sep');
+	items['order'].push('folder');
 
-			// preferring to do the folder CSS here because the base URL can change
-			$matrix.util.createCSSRule('folder');
+	// preferring to do the folder CSS here because the base URL can change
+	$matrix.util.createCSSRule('folder');
 
 //console.log('items', items);
 
 
-			// common bits on each types context menu
-			var typeCommon = {
-				sep: '-',
-				teleport: {
-					name: $matrix.util.translate('asset_map_menu_teleport'),
-					disabled: true
-				},
-				refresh: {
-					name: $matrix.util.translate('asset_map_menu_refresh'),
-					callback: function(key, options) {
+	// common bits on each types context menu
+	var typeCommon = {
+		sep: '-',
+		teleport: {
+			name: $matrix.util.translate('asset_map_menu_teleport'),
+			disabled: true
+		},
+		refresh: {
+			name: $matrix.util.translate('asset_map_menu_refresh'),
+			callback: function(key, options) {
 console.log('TODO refreshing something')
-					},
-					disabled: true
-				},
-				// TODO this item needs to be replaced after an asset has been
-				// created
-				prev: {
-					name: $matrix.util.translate('asset_map_menu_no_previous_child'),
-					disabled: true,
-					callback: function(key, options) {
+			},
+			disabled: true
+		},
+		// TODO this item needs to be replaced after an asset has been
+		// created
+		prev: {
+			name: $matrix.util.translate('asset_map_menu_no_previous_child'),
+			disabled: true,
+			callback: function(key, options) {
 console.log('TODO figure out what previous child option does');
-					}
-				},
-				'new': {
-					name: 'New Child',
-					items: items
-				}
-			};
+			}
+		},
+		'new': {
+			name: 'New Child',
+			items: items
+		}
+	};
 
-			// create context menus for each asset type
-			$.each($map.menuItems, function(k, v) {
-				$.extend(v, typeCommon);
-			});
+	// create context menus for each asset type
+	$.each($map.menuItems, function(k, v) {
+		$.extend(v, typeCommon);
+	});
 
 
-			$map.menus['asset'] = $map.selector + ' li.asset';
-			$.contextMenu({
-				selector: $map.menus['asset'],
-				trigger: 'right',
+	$map.menus['asset'] = $map.selector + ' li.asset';
+	$.contextMenu({
+		selector: $map.menus['asset'],
+		trigger: 'right',
 //				events: {
 //					hide: function(options) {
 //console.log('hiding', arguments);
 //					}
 //				},
-				build: function($trigger, e) {
-					var $asset = $trigger.children('a.asset_name');
-					var items = $map.menuItems[$asset.attr('type_code')];
+		build: function($trigger, e) {
+			var $asset = $trigger.children('a.asset_name');
+			var items = $map.menuItems[$asset.attr('type_code')];
 
-					return {
-						// requests for new children SHOULD BE handled automatically
-						// we're just handling the first level of the menu (asset screens)
-						callback: function(key, options) {
-							var screenUrl = $matrix.backend.getScreenUrl(key, $asset);
+			return {
+				// requests for new children SHOULD BE handled automatically
+				// we're just handling the first level of the menu (asset screens)
+				callback: function(key, options) {
+					var screenUrl = $matrix.backend.getScreenUrl(key, $asset);
 
-							$matrix.util.changeMain(screenUrl);
-						},
-						items: items
-					}
-				}
-			});
+					$matrix.util.changeMain(screenUrl);
+				},
+				items: items
+			}
+		}
+	});
 
 //console.log('$map.menus', $map.menus);
 
-			$map.menus['main'] = $map.selector;
-			$.contextMenu({
-				selector: $map.menus['main'],
-				trigger: 'right',
-				callback: function(key, options) {
-					console.log(arguments);
+	$map.menus['main'] = $map.selector;
+	$.contextMenu({
+		selector: $map.menus['main'],
+		trigger: 'right',
+		callback: function(key, options) {
+			console.log(arguments);
 
-					// TODO this should go into a useme type state
-					// and allow selecting the parent of the new asset
-					// see MatrixTree.java:1332
+			// TODO this should go into a useme type state
+			// and allow selecting the parent of the new asset
+			// see MatrixTree.java:1332
 
-					// create a new asset at the root
-					// TODO work out where this asset is being added
-					$matrix.backend.createAsset(key, 1 /*, TODO undefined*/);
-				},
-				items: items
-			});
+			// create a new asset at the root
+			// TODO work out where this asset is being added
+			$matrix.backend.createAsset(key, 1 /*, TODO undefined*/);
+		},
+		items: items
+	});
 
-			// play on ;)
+	// play on ;)
 //			callback && callback();
 
-		}// End success
-/*
-	});// End ajax
 }
-*/
 
 
 // Given some XML describing a level of the tree, construct the contents of that
@@ -1022,6 +974,7 @@ var buildBranch = function buildBranch($root, $xml) {
 
 var refreshAssets = function refreshAssets(assetids) {
 console.log('refreshAssets', arguments);
+
 	// we're doing this so if the root is being refreshed
 	// we hit it first and forget the others
 	// TODO this will need to change when we're selectively updating
@@ -1032,7 +985,7 @@ console.log('refreshAssets', arguments);
 	if (assetids[0] == '1') {
 		// TODO notification
 		$($map.selector).empty();
-		load_root(1);
+		refreshRoot(1);
 		return;
 	}
 
@@ -1043,13 +996,12 @@ console.log('refreshing', assetids, $assets);
 	$assets.each(function(i, asset) {
 		var $asset = $(asset);
 		$asset.parent().removeClass('cache');
-//		expand($asset);
 		get_children(null, false, $asset, $asset.attr('assetid'), true);
 	});
 }
 
 
-var load_root = function load_root(assetid) {
+var refreshRoot = function refreshRoot(assetid) {
 	var current_asset, parent = true;
 
 	// Construct our XML to send
@@ -1062,7 +1014,6 @@ var load_root = function load_root(assetid) {
 
 	// Get our children
 	get_children(xml_get, parent, current_asset);
-
 }
 
 
@@ -1121,9 +1072,7 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 			}
 		},
 		success: function(xml) {
-//console.log('loaded', $(xml));
-//console.log('target', target);
-
+			// remove the existing branch
 			if (replace) {
 				current_asset
 					.parent()
@@ -1140,56 +1089,16 @@ var get_children = function get_children(xml_get, parent, current_asset, sub_roo
 			}
 
 			buildBranch($target, $(xml));
-/*
-			// Check each asset that we find
-			$(xml).find('asset').each(function() {
-				var $asset = $(this);
 
-				if ($asset.get(0).attributes.length) {
-					// record our parent
-					$asset.attr('parentid', current_asset ? current_asset.attr('assetid') : '1');
-
-					var asset_image = '<img class="asset_image" src="/__data/asset_types/' + getField($asset, 'type_code') + '/icon.png" />';
-
-					// is this a hidden asset?
-					if (getField($asset, 'link_type') === 2) {
-						// Type 2 link
-						asset_image = type_2_image + asset_image;
-					}
-
-					var info = $('<li></li>')
-						.html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + getField($asset, 'assetid') + '" href="#" class="asset_name">' + getField($asset, 'name') + '</a>')
-						.appendTo($target)
-						// See if we have kids
-						.addClass(getField($asset, 'num_kids') > 0 ? 'kids_closed' : '')
-						.addClass('asset') // used for menu control (menus are based on selectors)
-						.children('a:last');
-
-					// add our info
-					// TODO this is bad, should consider using prop or data instead to store the values
-					// see http://api.jquery.com/prop/
-					$.each(this.attributes, function(i, attr) {
-						info.attr(attr.name, getField($asset, attr.name));
-					});
-				}// End if
-
-			});// End each
-
-			// Set our first/last class
-			$('li:first-child', $target).addClass('first');
-			$('li:last-child', $target).addClass('last');
-*/
 			// Remove loading indicator
 			$('.' + cls).remove();
 		}
-
 	});
 
 }
 
 
 var expand = function expand(current_asset) {
-
 	// Check to see if we already have a class
 	if (current_asset.hasClass('children')) {
 		current_asset.removeClass('children');
