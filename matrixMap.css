@@ -1,7 +1,7 @@
 /* Styles for jquery.matrix.js matrixMap plugin */
 
 /* Text Styles */
-#map_root {font: .9em/.6em Helvetica, Arial, Geneva, sans-serif; color: #000;}
+#map_root {font: .9em/.6em Helvetica, Arial, Geneva, sans-serif; color: #000; height: 100%;}
 
 /* Remove any offending styles */
 #map_root a,
@@ -50,3 +50,12 @@
 #map_root a.live {background-color: #dbf18a; border: 1px solid #ccc;}
 #map_root a.construction {background-color: #aaccdd; border: 1px solid #ccc;}
 
+#map_root.useme { background-color: #E9D4F4; }
+
+/* TODO need to use reset.css */
+* {
+	-webkit-margin-before: 0;
+	-webkit-margin-after: 0;
+	-webkit-margin-start: 0;
+	-webkit-margin-end: 0;
+}

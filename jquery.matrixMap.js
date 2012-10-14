@@ -486,17 +486,16 @@ $map.mode[MODE_SELECT] = {
 $map.mode[MODE_USEME] = {
 	color: null,
 	enter: function() {
-		// funky colour
-		$map.mode[MODE_USEME].color = $($map.selector).css('background-color');
-		$($map.selector).css('background-color', 'E9D4F4');
+		$($map.selector).addClass('useme');
 
 		// enable the "useme" context menus
 		$($map.menus['useme-name']).contextMenu(true);
 		$($map.menus['useme-li']).contextMenu(true);
 	},
 	exit: function() {
+		$($map.selector).removeClass('useme');
 		// inherit whatever colour came before
-		$($map.selector).css('background-color', $map.mode[MODE_USEME].color);
+//		$($map.selector).css('background-color', $map.mode[MODE_USEME].color);
 
 		// disable the "useme" context menus
 		$($map.menus['useme-name']).contextMenu(false);
@@ -518,7 +517,8 @@ $matrix.util = {
 	// see AssetMap.java:74
 	changeMain: function (url) {
 console.log('opening', url);
-		window.parent.frames['sq_main'].location = url;
+//		window.parent.frames['sq_main'].location = url;
+		window.frames['sq_main'].location = url;
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
@@ -598,6 +598,7 @@ var initialise = function initialise(callback) {
 //	initialiseTranslations(function() {
 //		initialiseAssetTypes(callback);
 //	});
+
 	$.ajax({
 		url: $matrix.backend.getUrl($map.params.adminSuffix),
 		type: 'POST',
@@ -610,7 +611,6 @@ var initialise = function initialise(callback) {
 		},
 		success: function(xml) {
 			initialiseTranslation($(xml).find('translations'));
-//			initialiseAssetTypes($(xml).find('types'));
 		},
 		complete: function() {
 			$.ajax({
@@ -1141,6 +1141,7 @@ console.log('with', this.target);
 							$map.mode.change(MODE_USEME);
 							break;
 						case 'assetFinderStopped':
+							$map.mode.change(MODE_NORMAL);
 							break;
 					}
 
@@ -1175,11 +1176,13 @@ $.fn.matrixMap = function (options) {
 
 	// Create our element
 	obj
-		.append('<ul></ul>')
-		.attr({
-			id: $map._id, // TODO allow multiple maps
-			assetid: options.root // this allows creation of a map at a root other than 1 (ie, user pref)
-		});
+		.append(
+			$('<ul></ul>')
+				.attr({
+					id: $map._id, // TODO allow multiple maps
+					assetid: options.root // this allows creation of a map at a root other than 1 (ie, user pref)
+				})
+		);
 
 	initialise(function() {
 		buildContextMenus();
