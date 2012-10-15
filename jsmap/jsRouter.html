@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<!-- TODO don't require this because we're pinching jQuery from the "actual" sq_sidenav -->
+		<!-- this is to allow other frames to wait until we're ready -->
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+		<script type="text/javascript">
+			// this just makes sure that matrix doesn't add the necessary setup calls to onload
+			// see core/lib/html_form/html_form.inc:829
+			// we want this done _early_
+			var SQ_DOCUMENT_LOADED = true;
+
+
+			// property names are the frame names of where the method is targeted
+			// values are arrays of function names within those frames
+			var _routedFunctions = {
+				sq_sidenav: [
+					'set_finder',
+					'asset_finder_change_btn_press',
+					'jsToJavaCall'
+				],
+				sq_header: [
+					'cancelMsgDiv'
+				],
+				sq_main: [
+					'jumpToSearchResults'
+				]
+			};
+
+			// frame locations
+			// sq_resizer and sq_main are part of the main document, while their targets
+			// are iframes in sq_sidenav
+			// sq_sidenav and sq_header are iframes of sq_sidenav (yep, it's inside itself)
+			// and their targets are the correct frames respectively
+
+			// closure to handle routing
+			function getRouteFunction(frame, functionName) {
+				return function() {
+console.log('routing', functionName, arguments);
+//console.trace();
+					if (frame[functionName])
+						return frame[functionName].apply(this, arguments)
+					else
+						console.log('Can\'t find ' + functionName + ' in', frame);
+				}
+			}
+
+			// check where the target frame lives
+			var me = window.self.name, target;
+			switch (me) {
+				case 'sq_resizer':
+				case 'sq_main':
+					// we're naming them with a trailing underscore
+					target = top.frames['sq_sidenav'].frames[me];
+					break;
+				case 'sq_sidenav':
+				case 'sq_header':
+					target = top.frames[me];
+					break;
+				default:
+					console.log('unknown frame!', me);
+			}
+
+			// we should never hit this!
+			if (!target) {
+				console.log('failed setting up routing for ' + me);
+			}
+			else {
+//console.log('routing calls from ' + me, window, 'to', target);
+				if (_routedFunctions[me]) {
+					for (var i = 0, l = _routedFunctions[me].length; i < l; i++) {
+						window[_routedFunctions[me][i]] = getRouteFunction(target, _routedFunctions[me][i]);
+					}
+				}
+			}
+
+			// we expect sq_sidenav to be ready, so we'll signal to it that we're done
+			top.frames['sq_sidenav'].routerLoaded(me);
+		</script>
+	</head>
+	<body>
+		<!-- here we'll construct any DOM elements that are (mis)used by the other frames -->
+
+		<!-- this is required by sq_header, see core/include/backend.inc:826 -->
+		<div id="sq-search-wait-popup"/>
+	</body>
+</html>
