@@ -371,6 +371,7 @@ console.log('asset', asset);
 					console.log(XMLHttpRequest, textStatus, errorThrown);
 				},
 				success: function(xml) {
+console.log(xml);
 					var url = $(xml).find('url[js_function=asset_map_popup]').text();
 					url && open_hipo(url);
 				}
@@ -517,8 +518,8 @@ $matrix.util = {
 	// see AssetMap.java:74
 	changeMain: function (url) {
 console.log('opening', url);
-//		window.parent.frames['sq_main'].location = url;
-		window.frames['sq_main_'].location = url;
+		// here window refers to top.frames['sq_sidenav']
+		window.frames['sq_main'].location = url;
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
@@ -890,10 +891,6 @@ console.log('TODO figure out what previous child option does');
 		},
 		items: items
 	});
-
-	// play on ;)
-//			callback && callback();
-
 }
 
 
@@ -944,7 +941,7 @@ var buildBranch = function buildBranch($root, $xml, skip_root) {
 
 		if (this.attributes.length) {
 			// record our parent
-			$asset.attr('parentid', $root.attr('assetid'));
+			$asset.attr('parentid', $root.attr('assetid') || $root.attr('parent'));
 
 			var asset_image = '<img class="asset_image" src="/__data/asset_types/' + getField($asset, 'type_code') + '/icon.png" />';
 
@@ -1122,17 +1119,15 @@ $.fn.assetMapHandler = function() {
 	return {
 		target: $.fn.matrixMaps[0],
 		jsToJavaCall: function jsToJavaCall(type, command, params_str) {
-console.log('handling', arguments);
-console.log('with', this.target);
+//console.log('handling', arguments);
+//console.log('with', this.target);
 			switch (type) {
 				case 'asset_locator':
 					var bits = params_str.split("~");
 					var types = bits[0].split('|');
 					var positions = bits[1].split('|');
 
-//					console.log('target', $(this.target));
-//					$(this.target).find($map.selector).css('background-color', 'E9D4F4');
-//					console.log($(this.target).css('background-color'));
+console.log(arguments);
 					break;
 				case 'asset_finder':
 					switch (command) {
