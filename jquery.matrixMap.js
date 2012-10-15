@@ -518,7 +518,7 @@ $matrix.util = {
 	changeMain: function (url) {
 console.log('opening', url);
 //		window.parent.frames['sq_main'].location = url;
-		window.frames['sq_main'].location = url;
+		window.frames['sq_main_'].location = url;
 	},
 	// first argument is action, second is object containing command attributes
 	// third is an array of children
