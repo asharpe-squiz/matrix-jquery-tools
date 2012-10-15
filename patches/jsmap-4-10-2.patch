@@ -1,0 +1,89 @@
+diff -ruw ../pristine/mysource_4-10-2/core/include/backend.inc core/include/backend.inc
+--- ../pristine/mysource_4-10-2/core/include/backend.inc	2012-07-26 15:21:04.000000000 +1000
++++ core/include/backend.inc	2012-10-16 00:15:46.962994623 +1000
+@@ -170,10 +170,17 @@
+ 				require_once SQ_INCLUDE_PATH.'/limbo_outputter.inc';
+ 				$this->out = new Limbo_Outputter();
+ 			} else {
++				// don't use the jsmap helper for the main frame
++				if (@$_REQUEST['SQ_BACKEND_PAGE'] !== 'main' && @$_REQUEST['jsmap'] === '1') {
++					require_once SQ_INCLUDE_PATH.'/backend_outputter_js.inc';
++					$this->out = new Backend_OutputterJS();
++				}
++				else {
+ 				// use backend outputter for other frames
+ 				require_once SQ_INCLUDE_PATH.'/backend_outputter.inc';
+ 				$this->out = new Backend_Outputter();
+ 			}
++			}
+ 
+ 			if (isset($_REQUEST['SQ_BACKEND_PAGE'])) {
+ 				// make sure to set persistant SQ_BACKEND_PAGE
+@@ -417,6 +431,7 @@
+ 			}
+ 		</script>
+ 		<?php
++
+ 		$this->out->addOnLoad('reload_timeout = setTimeout("reloadHeader()", REFRESH_UPDATE * 1000);');
+ 		$this->out->addOnLoad('reload_force_timeout = setTimeout("reloadHeader(true)", MAX_UPDATE * 1000);');
+ 
+diff -ruw ../pristine/mysource_4-10-2/core/include/mysource.inc core/include/mysource.inc
+--- ../pristine/mysource_4-10-2/core/include/mysource.inc	2012-08-16 17:37:23.000000000 +1000
++++ core/include/mysource.inc	2012-10-15 21:47:49.330881697 +1000
+@@ -539,8 +539,14 @@
+ 			}
+ 
+ 			if ($this->user && !($this->user instanceof Public_User)) {
++				if (@$_REQUEST['jsmap'] === '1') {
++					require_once SQ_INCLUDE_PATH.'/backend_js.inc';
++					$backend = new BackendJS();
++				}
++				else {
+ 				require_once SQ_INCLUDE_PATH.'/backend.inc';
+ 				$backend = new Backend();
++				}
+ 				$this->backend = &$backend;
+ 
+ 				$current_url     = current_url(FALSE, TRUE);
+diff -ruw ../pristine/mysource_4-10-2/core/lib/asset_map/asset_map.inc core/lib/asset_map/asset_map.inc
+--- ../pristine/mysource_4-10-2/core/lib/asset_map/asset_map.inc	2012-07-26 15:21:04.000000000 +1000
++++ core/lib/asset_map/asset_map.inc	2012-10-06 17:12:31.012886903 +1000
+@@ -462,6 +462,7 @@
+ 
+ 					$parameters = Array(
+ 									'parameter.backendsuffix'			=> SQ_CONF_BACKEND_SUFFIX,
++//									'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'] . '&XDEBUG_SESSION_START=netbeans-xdebug',
+ 									'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'],
+ 									'parameter.sessionkey'				=> $GLOBALS['SQ_SYSTEM']->getUniqueSessionKey(),
+ 									'parameter.url.iconurl'				=> '__lib/web/images/icons',
+@@ -1551,7 +1552,7 @@
+ 				}
+ 
+ 				if ($GLOBALS['SQ_SYSTEM']->am->assetInTrash($parent_assetid, TRUE)) {
+-					$this->_error('AMAP0009', $attr['parent_assetid']);
++					$this->_error('AMAP0009', $parent_assetid);
+ 					return;
+ 				}
+ 
+diff -ruw ../pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js core/lib/asset_map/asset_map.js
+--- ../pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js	2012-01-13 16:34:37.000000000 +1000
++++ core/lib/asset_map/asset_map.js	2012-10-15 17:42:21.678875970 +1000
+@@ -76,7 +76,17 @@
+ */
+ function get_java_applet_object()
+ {
+-	return document.sq_asset_map;
++	return document.sq_asset_map ? document.sq_asset_map : $('#map_root').assetMapHandler();
++
++//var framename = 'sq_jquerynav';
++var framename = 'sq_sidenav';
++//console.log('document', window.parent.frames[framename].document);
++//console.log('root', $('#map_root', window.parent.frames[framename].document));
++	if (window.parent.frames[framename])
++		return $('#map_root', window.parent.frames[framename].document).assetMapHandler();
++//	return $('#map_root', window.parent.frames['sq_jquerynav'].document).assetMapHandler();
++	return $('#map_root').assetMapHandler();
++//	return document.sq_asset_map;
+ 
+ }//end get_java_applet_object()
+ 
