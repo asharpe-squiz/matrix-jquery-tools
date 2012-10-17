@@ -26,9 +26,69 @@ console.log('Frame loaded that hasn\'t been accounted for in pre-loading of rout
 		loadFrames();
 
 		// start the asset map
-		$('#asset_map').matrixMap();
-
+		$('#asset_map')
+			.css({
+				bottom: '20px',
+				overflow: 'auto'
+			})
+			.matrixTree();
+//			.matrixMap();
+return;
 		randomFixing();
+
+		// start the jstree
+		// this is from git
+/*
+		$('#jsmap').jstree({
+			plugins:[
+				'json', // for initial data - see http://www.jstree.com/documentation/json_data
+				'crrm', // for dynamic addition - see http://www.jstree.com/documentation/crrm
+				'ui', // allows selection - see http://www.jstree.com/documentation/ui
+				'themes', // for icons - see http://www.jstree.com/documentation/themes
+				'dnd', // for drag/drop - see http://www.jstree.com/documentation/dnd
+				'cookies' // for state saving - see http://www.jstree.com/documentation/cookies
+			],
+			json: {
+				data: [
+					{
+						title: 'root',
+						attr: {
+							id: 1
+						},
+						li_attr: {
+							assetid: '1'
+						}
+					}
+				]
+			}
+		});
+*/
+/*
+		$('#jsmap').jstree({
+			plugins:[
+				'json_data',
+				'crrm',
+				'ui',
+				'themes',
+				'dnd'
+			],
+			json_data: {
+				data: [
+					{
+						data: 'root',
+						state: 'closed',
+						attr: {
+							id: 1,
+							assetid: 1
+						},
+						children: []
+					}
+				]
+			}
+		});
+		// see http://code.google.com/p/jstree/issues/detail?id=977
+		$.jstree._fn.get_rollback = function(){this.__callback();}
+*/
 	}
 }
 
@@ -69,7 +129,8 @@ function randomFixing() {
 	var mapPadding = 12;
 
 	$('#asset_map')
-		.css('height', mapHeight + 'px')
+//		.css('height', mapHeight + 'px')
+//		.css('bottom', '20px')
 		.children().not('[id="jsmap"]')
 			.css({
 				width: (mapWidth - (mapPadding + 5) * 2) + 'px',

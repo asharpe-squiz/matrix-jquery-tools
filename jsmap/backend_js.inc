@@ -123,6 +123,20 @@ class BackendJS extends Backend {
 						sq_sidenav: '<?php echo $frame_urls['sidenav']; ?>',
 						sq_resizer: '<?php echo $frame_urls['resizer']; ?>'
 					};
+
+					// this is to make frame selection robust for existing code
+					// there SHOULD BE a patch to matrix code to use this
+					var getFrame = function getFrame(name) {
+						switch (name) {
+							case 'sq_header': return top.frames['sq_header'];
+							case 'sq_sidenav': return top.frames['sq_sidenav'];
+							case 'sq_resizer': return getFrame('sq_sidenav').frames['sq_resizer'];
+							case 'sq_main': return getFrame('sq_sidenav').frames['sq_main'];
+						}
+
+						// this might not be sane!
+						return top;
+					}
 				</script>
 			</head>
 			<?php

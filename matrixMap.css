@@ -50,7 +50,8 @@
 #map_root a.live {background-color: #dbf18a; border: 1px solid #ccc;}
 #map_root a.construction {background-color: #aaccdd; border: 1px solid #ccc;}
 
-#map_root.useme { background-color: #E9D4F4; }
+.jstree.jstree-default.jstree-focused { background-color: white; }
+.jstree.jstree-default.useme { background-color: #E9D4F4; }
 
 /* TODO need to use reset.css */
 * {
@@ -58,4 +59,8 @@
 	-webkit-margin-after: 0;
 	-webkit-margin-start: 0;
 	-webkit-margin-end: 0;
+}
+
+li.context-menu-item.icon {
+	min-height: 10px;
 }

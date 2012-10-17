@@ -52,23 +52,24 @@ class Backend_OutputterJS extends Backend_Outputter {
 		// add the requisite JS
 		$this->addJSInclude('https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');
 		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.js');
-		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery.matrixMap.js');
+		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery.matrixTree.js');
 		$this->addJSInclude(sq_web_path('lib') . '/jsmap/framesetup.js');
 		$this->addJSInclude(sq_web_path('lib') . '/asset_map/asset_map.js');
 
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.css');
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/matrixMap.css');
-		
-		$this->addJSInclude(sq_web_path('root_url') . '/dev/jstree/dist/jstree.js');
 
+		$this->addJSInclude(sq_web_path('root_url') . '/dev/jstree/jquery.jstree.js');
+
+		// we're appending the name so it's easier to find out what frame is requesting the router
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
 		$this->addOnLoad('top.frames["sq_resizer"].location.href = jsRouterPath + "sq_resizer&src=backend_outputter_js";');
 		$this->addOnLoad('top.frames["sq_main"].location.href = jsRouterPath + "sq_main&src=backend_outputter_js";');
 
 		$returnValue = parent::_paintHeader();
 
-		// allow capturing the router path
 		?>
+		<!-- allow capturing the router path -->
 		<script type="text/javascript">
 			var jsRouterPath;
 		</script>
