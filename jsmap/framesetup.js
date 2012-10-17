@@ -70,9 +70,9 @@ function randomFixing() {
 
 	$('#asset_map')
 		.css('height', mapHeight + 'px')
-		.children()
+		.children().not('[id="jsmap"]')
 			.css({
-				width: (mapWidth - mapPadding * 2) + 'px',
+				width: (mapWidth - (mapPadding + 5) * 2) + 'px',
 				height: (mapHeight - mapPadding * 2) + 'px',
 				position: 'absolute'
 			});

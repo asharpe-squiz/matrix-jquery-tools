@@ -18,7 +18,7 @@
 
 /* Tree */
 /*#map_root {width: 400px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}*/
-#map_root {overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}
+#map_root {overflow: auto; background-color: #fff; padding: 6px 12px; margin:0;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}
 #map_root li a {color: #000; font-size: .9em; line-height: 12px; height: 14px;}
 #map_root li a:hover {color: #000;}
 #map_root li img {margin-bottom: 0;}

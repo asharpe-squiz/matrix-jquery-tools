@@ -18,7 +18,6 @@ Limitations:
 
 
 TODO
-	polling for refresh - see AssetMap.java:246
 
 	click the plus to expand/contract the tree
 
@@ -224,7 +223,8 @@ $.fn.matrix = {
 	map: {
 		// TODO supply these from PHP
 		params: {
-			refreshInterval: 500, // milliseconds
+			// see AssetMap.java:246
+			refreshInterval: 5000, // milliseconds
 			adminSuffix: '_admin/', // don't fuck this up, xhr doesn't follow redirects
 			fetchLimit: 150,
 			lib: '__lib'

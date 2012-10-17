@@ -58,6 +58,8 @@ class Backend_OutputterJS extends Backend_Outputter {
 
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.css');
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/matrixMap.css');
+		
+		$this->addJSInclude(sq_web_path('root_url') . '/dev/jstree/dist/jstree.js');
 
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
 		$this->addOnLoad('top.frames["sq_resizer"].location.href = jsRouterPath + "sq_resizer&src=backend_outputter_js";');

@@ -349,6 +349,7 @@ class BackendJS extends Backend {
 				</table>
 
 				<div id="asset_map" style="position: absolute; top: 47px; left: 6px; visibility: visible; border-top: 0px none; border-left: 0px none; width: <?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH'); ?>px">
+					<div id="jsmap"></div>
 				</div>
 				<div id="my_space" style="position: absolute; top: 44px; left: 0px; visibility: hidden;">
 					<?php
