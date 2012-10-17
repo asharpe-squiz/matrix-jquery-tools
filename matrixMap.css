@@ -50,6 +50,9 @@
 #map_root a.live {background-color: #dbf18a; border: 1px solid #ccc;}
 #map_root a.construction {background-color: #aaccdd; border: 1px solid #ccc;}
 
+
+
+/* background colours for the tree, default and in useme mode */
 .jstree.jstree-default.jstree-focused { background-color: white; }
 .jstree.jstree-default.useme { background-color: #E9D4F4; }
 
@@ -61,6 +64,14 @@
 	-webkit-margin-end: 0;
 }
 
+/* make the menu smaller so we can see it on one screen */
+/* TODO fix scrollbars for this */
 li.context-menu-item.icon {
 	min-height: 10px;
+}
+
+/* pure cosmetics for the loading spinner */
+img.loading {
+	margin-left: 3px;
+	margin-bottom: -3px;
 }

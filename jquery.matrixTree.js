@@ -648,6 +648,11 @@ init = $(xml);
 								types: $map.assetTypes,
 								type_attr: 'type_code'
 							},
+							themes: {
+								theme: "classic",
+								dots: true,
+								icons: true
+							},
 							json_data: {
 								data: [
 									{
@@ -1064,6 +1069,9 @@ var get_children = function get_children(xml_get, parent, $current_asset, replac
 		}]);
 	}
 
+	// for removing the loading indicator
+	var cls = 'loading' + String(Math.random()).replace(/^0\./, '');
+
 	// Create our ajax to send the XML
 	$.ajax({
 		url: $matrix.backend.getUrl(),
@@ -1076,7 +1084,7 @@ var get_children = function get_children(xml_get, parent, $current_asset, replac
 			console.log(XMLHttpRequest, textStatus, errorThrown);
 		},
 		beforeSend: function () {
-			// TODO loading indicator
+			$current_asset.children('a').append($('<img class="loading ' + cls + '" src="/dev/325.1.gif" width="12" height="12"></img>'));
 		},
 		success: function(xml) {
 			// (re)build the list
@@ -1085,6 +1093,10 @@ var get_children = function get_children(xml_get, parent, $current_asset, replac
 			}
 
 			buildBranch($target, $(xml));
+		},
+		complete: function() {
+			// Remove loading indicator
+			$('.' + cls, $current_asset).remove();
 		}
 	});
 

@@ -185,6 +185,7 @@ class BackendJS extends Backend {
 		foreach ($include_list as $link) {
 			echo '<script type="text/javascript" src="'.$link.'"></script>'."\n";
 		}
+		$this->_printAssetMapParams();
 		?>
 		<style type="text/css">
 			body {
@@ -363,7 +364,6 @@ class BackendJS extends Backend {
 				</table>
 
 				<div id="asset_map" style="position: absolute; top: 47px; left: 6px; visibility: visible; border-top: 0px none; border-left: 0px none; width: <?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH'); ?>px">
-					<div id="jsmap"></div>
 				</div>
 				<div id="my_space" style="position: absolute; top: 44px; left: 0px; visibility: hidden;">
 					<?php
@@ -455,6 +455,108 @@ class BackendJS extends Backend {
 		$this->out->closeRaw();
 
 	}//end _printSideNav()
+
+
+	// this is mostly a copy of Asset_Map::embedAssetMap
+	// see asset_map.inc:371
+	function _printAssetMapParams($type = 'simple') {
+		// we need some utils from Asset_Map
+		require_once SQ_LIB_PATH.'/asset_map/asset_map.inc';
+		$assetMap = new Asset_Map;
+
+		$root_url = sq_web_path('root_url');
+		if ($root_url{strlen($root_url) - 1} != '/') {
+			$root_url = $root_url.'/';
+		}
+
+		// we want to use current_url()
+		require_once SQ_INCLUDE_PATH.'/general.inc';
+
+		ob_start();
+			echo '<script type="text/javascript">';
+			if (isset($GLOBALS['SQ_SYSTEM']->user)) {
+				$user = $GLOBALS['SQ_SYSTEM']->user;
+			} else {
+				$user = NULL;
+			}//end if
+
+			// Check for at least simple edit access
+			if (is_null($user) || $user instanceof Public_User || (method_exists($user, 'canAccessBackend') && !($user instanceof Simple_Edit_User || $user->canAccessBackend()))) {
+			?>
+				alert('You need Simple Edit access or higher to view the Asset Map');
+			<?php
+			} else {
+				$prefs = $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_LINEAGE');
+
+				$assetids = explode(',',$prefs);
+				$rootlineage = '';
+
+				$common_parentid = $assetMap->_findCommonRoot($assetids);
+
+				if (!empty($common_parentid)) {
+					$lineages = $GLOBALS['SQ_SYSTEM']->am->getLinkLineages($common_parentid);
+
+					// Find the first SQ_SC_LINK_BACKEND_NAV, rather than simply getting it from the beginning
+					$first_lineage = Array();
+					if (!empty($lineages)) {
+						foreach ($lineages as $lineage) {
+							if ((int) $lineage['link_type'] & SQ_SC_LINK_BACKEND_NAV) {
+								$first_lineage = $lineage;
+								break;
+							}
+						}
+					}
+
+					if (!empty($first_lineage)) {
+						$lineage_assetids = array_keys($first_lineage['lineage']);
+						$lineage_assetids[] = $common_parentid;
+						$rootlineage = get_asset_lineage_sort_order($lineage_assetids);
+
+						// Initial Lineage Selection will be disabled if the Root Node is set for the user
+						// Simply asset map does not work for this option
+						$initial_selection_lineage = '';
+					}
+				}
+
+				if (empty($rootlineage)) {
+					// Initial lineage selection (i.e ..com/site1/blah/_admin will expand the lineage of that asset)
+					$initial_selection_lineage = $assetMap->_getInitialLineageSelection($type);
+				}
+
+				$parameters = Array(
+								'parameter.backendsuffix'			=> SQ_CONF_BACKEND_SUFFIX,
+//									'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'] . '&XDEBUG_SESSION_START=netbeans-xdebug',
+								'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'],
+								'parameter.sessionkey'				=> $GLOBALS['SQ_SYSTEM']->getUniqueSessionKey(),
+								'parameter.url.iconurl'				=> '__lib/web/images/icons',
+								'parameter.url.typecodeurl'			=> '__data/asset_types',
+								'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
+								'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
+								'parameter.url.assetmapiconurl'		=> '__lib/web/images/icons/asset_map',
+								'parameter.url.baseurl'				=> $root_url,
+								'parameter.url.execurl'				=> $root_url.SQ_CONF_BACKEND_SUFFIX.'?SQ_ACTION=asset_map_request&SESSION_ID='.$_COOKIE['SQ_SYSTEM_SESSION'].'&SESSION_KEY='.$GLOBALS['SQ_SYSTEM']->getUniqueSessionKey(),
+								'parameter.asset.limit'				=> SQ_CONF_ASSET_MAP_ASSET_LIMIT,
+								'parameter.java.supportedversion'	=> '1.4.2,1.5.0,1.6.0',
+								'parameter.java.sunurl'				=> 'http://java.sun.com/webapps/getjava/BrowserRedirect?locale=en&host=www.java.com:80',
+								'parameter.rootlineage'				=> $rootlineage,
+								'parameter.initialselection'		=> $initial_selection_lineage,
+								);
+
+				// this is important because it tells the asset map what the available
+				// paramters are so that it can load them without explicitly knowing the names
+				$params = implode(',', array_keys($parameters));
+				?>$.extend($.fn.matrix.map.params, <?php
+				echo json_encode($parameters);
+/*
+				foreach ($parameters as $parameter => $value) {
+					?><param name="<?php echo $parameter; ?>" value="<?php echo $value; ?>" /><?php
+				}
+*/?>);
+	<?php
+			} //end if
+			echo '</script>';
+		ob_end_flush();
+	}
 
 
 	/**
