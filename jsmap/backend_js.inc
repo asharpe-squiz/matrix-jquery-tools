@@ -128,10 +128,14 @@ class BackendJS extends Backend {
 					// there SHOULD BE a patch to matrix code to use this
 					var getFrame = function getFrame(name) {
 						switch (name) {
-							case 'sq_header': return top.frames['sq_header'];
-							case 'sq_sidenav': return top.frames['sq_sidenav'];
-							case 'sq_resizer': return getFrame('sq_sidenav').frames['sq_resizer'];
-							case 'sq_main': return getFrame('sq_sidenav').frames['sq_main'];
+							// these honkeys stay where they are
+							case 'sq_header':
+							case 'sq_sidenav':
+								return top.frames[name];
+							// these bad boys live inside sq_sidenav
+							case 'sq_resizer':
+							case 'sq_main':
+								return getFrame('sq_sidenav').frames[name];
 						}
 
 						// this might not be sane!
