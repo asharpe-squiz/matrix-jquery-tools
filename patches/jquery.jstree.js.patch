@@ -1,0 +1,29 @@
+--- jquery.jstree.js.orig	2012-10-18 22:31:20.761182500 +1000
++++ jquery.jstree.js	2012-10-19 13:59:02.095110305 +1000
+@@ -2192,7 +2192,7 @@
+ 		user_data : {},
+ 
+ 		drag_start : function (e, data, html) { 
+-			if($.vakata.dnd.is_drag) { $.vakata.drag_stop({}); }
++			if($.vakata.dnd.is_drag) { $.vakata.dnd.drag_stop({}); }
+ 			try {
+ 				e.currentTarget.unselectable = "on";
+ 				e.currentTarget.onselectstart = function() { return false; };
+@@ -2529,6 +2529,17 @@
+ 			drag_check		: function (data) { return { after : false, before : false, inside : true }; }
+ 		},
+ 		_fn : {
++			dnd_expose : function () {
++				// anything we want from this closure, at the time it's called
++				// m and ml won't change, however the others do
++				return {
++					o: o,
++					r: r,
++					last_pos: last_pos,
++					m: m,
++					ml: ml
++				}
++			},
+ 			dnd_prepare : function () {
+ 				if(!r || !r.length) { return; }
+ 				this.data.dnd.off = r.offset();

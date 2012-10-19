@@ -63,8 +63,9 @@ class Backend_OutputterJS extends Backend_Outputter {
 
 		// we're appending the name so it's easier to find out what frame is requesting the router
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
-		$this->addOnLoad('top.frames["sq_resizer"].location.href = jsRouterPath + "sq_resizer&src=backend_outputter_js";');
-		$this->addOnLoad('top.frames["sq_main"].location.href = jsRouterPath + "sq_main&src=backend_outputter_js";');
+		$this->addOnLoad('routerLoaded("sq_override");');
+//		$this->addOnLoad('top.frames["sq_resizer"].location.href = jsRouterPath + "sq_resizer&src=backend_outputter_js";');
+//		$this->addOnLoad('top.frames["sq_main"].location.href = jsRouterPath + "sq_main&src=backend_outputter_js";');
 
 		$returnValue = parent::_paintHeader();
 

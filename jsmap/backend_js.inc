@@ -162,8 +162,8 @@ class BackendJS extends Backend {
 					<frame src="<?php echo $frame_urls['sidenav']; ?>" name="sq_sidenav" frameborder="0" scrolling="no" marginwidth="0" marginheight="0">
 
 					<!-- these routers are loaded once sq_sidenav is ready -->
-					<frame src="about:blank" frameborder="0" name="sq_resizer" scrolling="no" marginwidth="0" marginheight="0">
-					<frame src="about:blank" frameborder="0" name="sq_main" scrolling="no" marginwidth="0" marginheight="0">
+					<!--frame src="about:blank" frameborder="0" name="sq_resizer" scrolling="no" marginwidth="0" marginheight="0">
+					<frame src="about:blank" frameborder="0" name="sq_main" scrolling="no" marginwidth="0" marginheight="0"-->
 
 				</frameset>
 				<?php
@@ -423,7 +423,7 @@ class BackendJS extends Backend {
 				</div>
 
 				<!-- hidden iframe to route calls to the left nav -->
-				<iframe src="<?php echo sq_web_path('lib') . '/jsmap/jsRouter.html'; ?>?name=sq_sidenav&src=backend_js" name="sq_sidenav" border="0" scrolling="no" marginwidth="0" marginheight="0" style="display:none"></iframe>
+				<!--iframe src="<?php echo sq_web_path('lib') . '/jsmap/jsRouter.html'; ?>?name=sq_sidenav&src=backend_js" name="sq_sidenav" border="0" scrolling="no" marginwidth="0" marginheight="0" style="display:none"></iframe-->
 
 				<iframe src="about:blank" name="sq_resizer" border="0" width="10" scrolling="no" marginwidth="0" marginheight="0" style="position:absolute;left:280;top:0;border:0;height:100%"></iframe>
 				<!-- this frame refers to itself to set the asset finder, see core/lib/html_form/html_form.inc:829 -->
@@ -431,7 +431,7 @@ class BackendJS extends Backend {
 
 				<!-- hidden iframe to satisfy requirement for header frame. see backend.inc:1499 -->
 				<!-- TODO intercept calls to this frame and redirect them (if any) -->
-				<iframe src="<?php echo sq_web_path('lib') . '/jsmap/jsRouter.html'; ?>?name=sq_header&src=backend_js" name="sq_header" border="0" scrolling="no" marginwidth="0" marginheight="0" style="display:none"></iframe>
+				<!--iframe src="<?php echo sq_web_path('lib') . '/jsmap/jsRouter.html'; ?>?name=sq_header&src=backend_js" name="sq_header" border="0" scrolling="no" marginwidth="0" marginheight="0" style="display:none"></iframe-->
 
 				<script type="text/javascript">
 					$(function() {

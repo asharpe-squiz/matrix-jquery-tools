@@ -1,9 +1,10 @@
 // keep track of which routers are loaded
 var loadedRouters = {
-	sq_header: false,
-	sq_sidenav: false,
-	sq_resizer: false,
-	sq_main: false
+//	sq_header: false,
+//	sq_sidenav: false,
+//	sq_resizer: false,
+//	sq_main: false
+	sq_override: false
 };
 
 // this will be called by all the router frames
@@ -11,7 +12,8 @@ function routerLoaded(frameName) {
 //console.log('routerLoaded', arguments);
 //console.trace();
 	if (!loadedRouters.hasOwnProperty(frameName)) {
-console.log('Frame loaded that hasn\'t been accounted for in pre-loading of routers');
+console.log('Frame loaded that hasn\'t been accounted for in pre-loading of routers', frameName);
+console.trace();
 		return;
 	}
 
@@ -20,7 +22,9 @@ console.log('Frame loaded that hasn\'t been accounted for in pre-loading of rout
 	if (routersLoaded()) {
 		// avoid loading again
 		// TODO this is a hack
-		loadedRouters = {};
+		loadedRouters = {
+			sq_lookin_good: false
+		};
 
 		// load the real contents
 		loadFrames();
@@ -114,9 +118,13 @@ function loadFrames() {
 	// showing main before the header so it can access the sq-search-wait-popup
 	// TODO there's still a race condition here
 	// we could poll for the sq-search-wait-popup, then load the header...
-	frames['sq_main'].location.href = frameInfo['sq_main'];
-	frames['sq_resizer'].location.href = frameInfo['sq_resizer'];
-	parent.frames['sq_header'].location.href = frameInfo['sq_header'];
+//	frames['sq_main'].location.href = frameInfo['sq_main'];
+//	frames['sq_resizer'].location.href = frameInfo['sq_resizer'];
+//	parent.frames['sq_header'].location.href = frameInfo['sq_header'];
+
+	top.getFrame('sq_main').location.href = frameInfo['sq_main'];
+	top.getFrame('sq_resizer').location.href = frameInfo['sq_resizer'];
+	top.getFrame('sq_header').location.href = frameInfo['sq_header'];
 }
 
 

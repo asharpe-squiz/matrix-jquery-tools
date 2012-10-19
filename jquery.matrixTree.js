@@ -71,10 +71,11 @@ var buildContextMenus = function buildContextMenus() {
 	$.extend($.contextMenu.defaults, {
 		events: {
 			show: function(options) {
-console.log('show.this', this);
-console.log('show.args', arguments);
+//console.log('show.this', this);
+//console.log('show.args', arguments);
 				// store the node that was clicked
 				options.$target = this.closest('li');
+console.log('options.$target', options);
 			},
 			hide: function(options) {
 				// this is called in addition to the command callback
@@ -92,54 +93,64 @@ console.log('context menu hide changing map mode from', $map.mode.current);
 	});
 
 	// context menu for move/link/clone
-	$map.menuSelectors['select'] = $map.selector + ' .asset_name.selectable';
+//	$map.menuSelectors['select'] = $map.selector + ' .asset_name.selectable';
+	$map.menuSelectors['select'] = $map.selector + ' li.jstree-leaf';
 	$.contextMenu({
 		selector: $map.menuSelectors['select'],
-		trigger: 'left',
+		trigger: 'none',
 		disabled: true,
 		events: {
-			hide: $.noop // override the default above
+//			hide: $.noop // override the default above
+			hide: function(options) {
+				$map.mode.change(MODE_NORMAL);
+			}
+		},
+		callback: function(key, options) {
+console.log('stuff to do stuff with');
+console.log($map.dnd_info);
+			var t = $.jstree._reference($map.selector);
+console.log('info', t.data.dnd);
 		},
 		items: {
 			move: {
 				name: $matrix.util.translate('asset_map_menu_move_here'),
-				callback: function(key, options) {
-					if (!(options.$target && $map.selected.length)) {
-						alert($matrix.util.translate('asset_map_error_invalid_node'));
-						return;
-					}
-
-					$matrix.backend.moveAssets($map.selected, options.$target);
-				}
+//				callback: function(key, options) {
+//					if (!(options.$target && $map.selected.length)) {
+//						alert($matrix.util.translate('asset_map_error_invalid_node'));
+//						return;
+//					}
+//
+//					$matrix.backend.moveAssets($map.selected, options.$target);
+//				}
 			},
 			newlink: {
 				name: $matrix.util.translate('asset_map_menu_link_here'),
-				callback: function(key, options) {
-					if (!(options.$target && $map.selected.length)) {
-						alert($matrix.util.translate('asset_map_error_invalid_node'));
-						return;
-					}
-
-					$matrix.backend.linkAssets($map.selected, options.$target);
-				}
+//				callback: function(key, options) {
+//					if (!(options.$target && $map.selected.length)) {
+//						alert($matrix.util.translate('asset_map_error_invalid_node'));
+//						return;
+//					}
+//
+//					$matrix.backend.linkAssets($map.selected, options.$target);
+//				}
 			},
 			clone: {
 				name: $matrix.util.translate('asset_map_menu_clone_here'),
 				disabled: true,
-				callback: function(key, options) {
-					if (!(options.$target && $map.selected.length)) {
-						alert($matrix.util.translate('asset_map_error_invalid_node'));
-						return;
-					}
-
-					$matrix.backend.cloneAssets($map.selected, options.$target);
-				}
+//				callback: function(key, options) {
+//					if (!(options.$target && $map.selected.length)) {
+//						alert($matrix.util.translate('asset_map_error_invalid_node'));
+//						return;
+//					}
+//
+//					$matrix.backend.cloneAssets($map.selected, options.$target);
+//				}
 			},
 			sep: '-',
 			cancel: {
 				name: $matrix.util.translate('asset_map_menu_cancel'),
 				callback: function(key, options) {
-					$map.mode.change(1);
+//					$map.mode.change(1);
 				}
 			}
 		}
@@ -247,8 +258,16 @@ $.fn.matrix = {
 					return;
 				}
 
+				if ($map.mode.current === newMode) {
+					console.log('LAME! attempt to change to existing mode - fix your code :-P');
+					console.trace();
+					return;
+				}
+
+				if ($map.debug) console.log('exiting mode', $map.mode.current);
 				$map.mode[$map.mode.current].exit.call(this);
 				$map.mode.current = newMode;
+				if ($map.debug) console.log('entering mode', $map.mode.current);
 				$map.mode[$map.mode.current].enter.call(this);
 			}
 		},
@@ -462,15 +481,58 @@ $map.mode[MODE_LINK] = {
 $map.mode[MODE_SELECT] = {
 	enter: function() {
 		// when hovering
-		$($map.selector + ' li')
-			.hover(
-				$matrix.util.mode5hover,
-				$matrix.util.mode5unhover
-			)
-			// TODO this could be setup at menu creation time and left alone
-			// unnecessary to add/remove this class
-			.find('.asset_name')
-				.addClass('selectable');
+//		$($map.selector + ' li')
+//			.hover(
+//				$matrix.util.mode5hover,
+//				$matrix.util.mode5unhover
+//			)
+//			// TODO this could be setup at menu creation time and left alone
+//			// unnecessary to add/remove this class
+//			.find('.asset_name')
+//				.addClass('selectable');
+
+
+		// start the trees drag 'n' drop
+		// the tree
+		var t = $.jstree._reference($map.selector);
+		// currently selected
+		var s = t.data.ui.selected;
+		if (!s.length) return;
+
+		// the position of the selected element, to initiate drag from
+		// TODO could use the mouse position here
+		var p = s.offset();
+
+/*
+		// a fake event to appease jstree
+		var e = $.Event('mousemove', {
+			currentTarget: s,
+			target: s,
+			pageX: p.left,
+			pageY: p.top
+		});
+
+		// this it
+		$.vakata.dnd.drag_start(e, {
+				jstree: true,
+				obj : t
+			}, "<ins class='jstree-icon'></ins>" + $(e.target).text()
+		);
+*/
+		t.start_drag(s, $.Event('mousemove', {
+			currentTarget: s,
+			pageX: p.left,
+			pageY: p.top
+		}));
+
+		// drag_start enables this, so we'll undo that
+		// see jstree:2206
+		$(document).unbind("mouseup", $.vakata.dnd.drag_stop);
+
+		// we also need to disable the starting of drag on a click so we
+		// can handle the context popup correctly
+		// see jstree:2389
+		t.get_container().undelegate("a", "mousedown.jstree");
 
 		// enable link/copy/clone context menu
 		$($map.menuSelectors['select']).contextMenu(true);
@@ -480,11 +542,41 @@ $map.mode[MODE_SELECT] = {
 		$($map.menuSelectors['select']).contextMenu(false);
 
 		// disable hover
-		$($map.selector + ' li')
-			.trigger('mouseleave')
-			.unbind('hover')
-			.find('.asset_name')
-				.removeClass('selectable');
+//		$($map.selector + ' li')
+//			.trigger('mouseleave')
+//			.unbind('hover')
+//			.find('.asset_name')
+//				.removeClass('selectable');
+		$.vakata.dnd.drag_stop({});
+
+		// enable drag start again
+		// see jstree:2389
+		var t = $.jstree._reference($map.selector);
+		t.get_container().delegate("a", "mousedown.jstree", $.proxy(function (e) {
+console.log('custom mousedown', this);
+			if(e.which === 1) {
+				this.start_drag(e.currentTarget, e);
+				return false;
+			}
+		}, t));
+
+		// hide the markers
+		// see jstree:2458
+		// see jstree:2744
+		if (t.dnd_expose().m) {
+			t.dnd_expose().m
+				.hide()
+				.css({
+					top: -2000
+				});
+		}
+		if (t.dnd_expose().ml) {
+			t.dnd_expose().ml
+				.hide()
+				.css({
+					top: -2000
+				});
+		}
 	}
 }
 $map.mode[MODE_USEME] = {
@@ -630,7 +722,9 @@ init = $(xml);
 
 					$($map.selector)
 						.bind("loaded.jstree", function (event, data) {
+							buildContextMenus();
 							buildBranch($($map.selector + ' [assetid=1]'), $(xml).find('assets'));
+//							$map.checkRefresh();
 						})
 						.jstree({
 							plugins:[
@@ -663,22 +757,167 @@ init = $(xml);
 										}
 									}
 								]
+							},
+							// see http://stackoverflow.com/questions/11000095/dnd-how-to-restrict-dropping-to-certain-node-types
+							crrm: {
+								input_width_limit: 200,
+								move: {
+									always_copy: "multitree", // false, true or "multitree"
+									open_onmove: false,
+									default_position: "last",
+									check_move: function (m) {
+
+										// we can check for valid parents here
+										// potentially circumventing the "going to fail" hipo
+//										if(!m.np.hasClass("someClassInTarget")) return false;
+//										if(!m.o.hasClass("someClassInSource")) return false;
+										return true;
+									}
+								}
+							},
+							dnd: {
+								drag_finish: function(data) {
+console.log('drag_finish', arguments);
+								},
+								drop_finish: function(data) {
+console.log('drop_finish', arguments);
+								}
 							}
+						})
+						.bind("move_node.jstree", function(evt, data) {
+console.log('move_node event', arguments);
+							var t = $.jstree._reference(this);
+							// we'll handle opening ourselves so we can control
+							// the refresh better
+							data.rslt.np.parentsUntil(".jstree").andSelf().filter(".jstree-closed").each(function () {
+								t.open_node(this, false, true);
+							});
 						})
 						// this is in the context of the tree
 						.bind('open_node.jstree', function(evt, data) {
 							if ($map.debug) console.log('open_node', arguments);
-							// this is a lame way to get to the element
-							if (data.args[0].attr('assetid') === '1') return;
 
+							// this is a lame way to get to the element
+							// data.args[0] needs wrapping due to opening via dnd
+							var $node = $(data.args[0]);
+
+							if ($node.attr('assetid') === '1') return;
+console.log('checking for open');
 							// check to see if we've already got our children
-							if (data.args[0].find('ul').length) return;
+							// this is broken when we're asked to open via dnd
+							if ($node.find('ul').length) return;
+
+							$node.attr('hasOpened', true);
 
 							// expand this branch
 							get_children(null, false, data.args[0]);
+						})
+						// this is to detect when we've programmatically started
+						// dnd, and we want to finish
+						// see jstree:2434
+						.bind('mousedown.sqtree', function(evt) {
+							// this is too blunt - want to close branches while in dnd
+							if($.vakata.dnd.is_drag && $.vakata.dnd.user_data.jstree) {
+								$.vakata.dnd.drag_stop({});
+								t.dnd_finish(evt);
+							}
 						});
 					// see http://code.google.com/p/jstree/issues/detail?id=977
-					$.jstree._fn.get_rollback = function(){this.__callback();}
+// breaks moving via dnd
+//					$.jstree._fn.get_rollback = function(){this.__callback();}
+
+					// to play with later
+					var t = $.jstree._reference($map.selector);
+
+					// custom dnd_finish to handle opening the context menu
+					var dnd_finish = function(e) {
+console.log('dnd_finish', arguments);
+//console.log('selected', t.data.ui.selected);
+//console.log('target', $(e.target).closest('li'));
+
+						var foundSelf = false;
+						t.data.ui.selected.each(function() {
+							if (this === $(e.target).closest('li').get(0)) {
+								foundSelf = true;
+								return false;
+							}
+						});
+
+						if (foundSelf) {
+console.log('self drop!');
+							// let the original method clean up
+//							return this.dnd_finish.old.apply(this, arguments);
+							return;
+						}
+
+						this.dnd_prepare();
+
+						// grab the info we need now because it's going away real shortly
+						$map.dnd_info = {
+							hidden: this.dnd_expose(),
+							data: $.extend({}, this.data.dnd)
+						};
+
+						// a chance at making a difference
+						$($map.menuSelectors['select']).contextMenu(e);
+					};
+					// TODO should probably use the prototype instead, and do
+					// this before any trees are created
+					dnd_finish.old = t.dnd_finish;
+					t.dnd_finish = dnd_finish;
+//					dnd_finish.old = $.jstree._fn.dnd_finish;
+//					$.jstree._fn.dnd_finish = dnd_finish;
+
+
+					// we'll make the first selection ourselves
+					$(document)
+						.bind('drag_start.vakata', function(evt, data) {
+console.log('drag_start', arguments);
+
+							// move into select mode
+							// don't do this - dnd has already started, and
+							// manually moving into MODE_SELECT will cause
+							// dnd to start again (programatically, and worse)
+//							$map.mode.change.call(data.event.target, MODE_SELECT);
+							// just do the MODE_SELECT bits we need manually
+							$map.mode.current = MODE_SELECT;
+							$($map.menuSelectors['select']).contextMenu(true);
+
+							// drag start should always use the originating node
+							// see jstree:2459
+							// TODO allow moving multiple nodes
+							t.deselect_all();
+							t.select_node($(data.event.target));
+
+							// make the marker line full width
+							// see jstree:2583
+							// see jstree:2408
+							t.dnd_expose().ml.css('width', $($map.selector).width() - $(data.event.target).offset().left);
+						})
+						.unbind('drag_stop.vakata')
+						.bind("drag_stop.vakata", $.proxy(function () {
+								if(this.data.dnd.to1) { clearTimeout(this.data.dnd.to1); }
+								if(this.data.dnd.to2) { clearTimeout(this.data.dnd.to2); }
+								if(this.data.dnd.i1) { clearInterval(this.data.dnd.i1); }
+								if(this.data.dnd.i2) { clearInterval(this.data.dnd.i2); }
+								this.data.dnd.after		= false;
+								this.data.dnd.before	= false;
+								this.data.dnd.inside	= false;
+								this.data.dnd.off		= false;
+								this.data.dnd.prepared	= false;
+								this.data.dnd.w			= false;
+								this.data.dnd.to1		= false;
+								this.data.dnd.to2		= false;
+								this.data.dnd.i1		= false;
+								this.data.dnd.i2		= false;
+								this.data.dnd.active	= false;
+								this.data.dnd.foreign	= false;
+								// we're doing everything except hiding the markers
+
+console.log('drag stopped');
+							}, t));
+
+
 
 				},
 				complete: function() {
@@ -689,7 +928,6 @@ init = $(xml);
 			});
 		}
 	});
-
 };
 
 
@@ -992,7 +1230,10 @@ var buildBranch = function buildBranch($root, $xml) {
 
 			var info = {
 				data: getField($asset, 'name'),
-				attr: {},
+				attr: {
+					// see http://stackoverflow.com/questions/6105905/drag-and-drop-events-in-dnd-plugin-in-jstree-are-not-getting-called
+					'class': 'jstree-drop'
+				},
 				state: getField($asset, 'num_kids') > 0 ? 'closed' : undefined
 			};
 
@@ -1019,7 +1260,7 @@ var refreshAssets = function refreshAssets(assetids) {
 	// we hit it first and forget the others
 	// TODO this will need to change when we're selectively updating
 	// the tree - at the moment we do a wholesale replace
-	assetids.sort();
+//	assetids.sort();
 
 	// get the asset
 	var $assets = $('[assetid=' + assetids.join('],[assetid=') + ']', $map.selector);
@@ -1031,11 +1272,11 @@ var refreshAssets = function refreshAssets(assetids) {
 
 		// don't do anything else if we're refreshing the root
 		// TODO reset the tree state after this
-		if (assetids[i] == '1') return false;
+//		if (assetids[i] == '1') return false;
 	});
 }
 
-
+/*
 var refreshRoot = function refreshRoot(assetid) {
 	var current_asset, parent = true;
 
@@ -1050,7 +1291,7 @@ var refreshRoot = function refreshRoot(assetid) {
 	// Get our children
 	get_children(xml_get, parent, current_asset);
 }
-
+*/
 
 var get_children = function get_children(xml_get, parent, $current_asset, replace) {
 	// What do we add it to?
@@ -1158,14 +1399,43 @@ console.log(this);
 	// TODO multiple maps
 	$map.selector = this.selector;
 
-	initialise(function() {
-		buildContextMenus();
+	initialise();
 
-		// TODO this needs to be triggered on an event when the asset map is ready
-		setTimeout($map.checkRefresh, 10000);
+	// Bind when user clicks icon to invoke a map mode
+	$(document).on('click', $map.selector + ' li.jstree-leaf', function(event) {
+console.log(event);
+console.log($map.selector + ' a > .jstree-icon', $map.mode.current);
+
+		var $target = $(event.target);
+//		var $this = $(this);
+
+		switch ($map.mode.current) {
+			case MODE_NORMAL:
+				if ($target.is('.jstree-icon') && $target.parent().is('a')) {
+console.log('bingo, got an icon');
+					event.preventDefault();
+					event.stopImmediatePropagation();
+
+					$map.mode.change.call(this, MODE_SELECT);
+					return false;
+				}
+				break;
+			case MODE_SELECT:
+				// need to do a programmatic drop
+//				$.jstree._reference($map.selector).dnd_finish(event);
+console.log('user_data', $.vakata.dnd.user_data);
+
+				event.preventDefault();
+				event.stopImmediatePropagation();
+
+//				$map.mode.change.call(this, MODE_NORMAL);
+
+				return false;
+		}
 	});
 
 
+/*
 	// Lets double click our parents to show their children
 	$(document).on('dblclick', $map.selector + ' li a', function() {
 		// Get our current asset
@@ -1271,25 +1541,27 @@ console.log('target', this);
 		// don't let the event continue
 		return false;
 	});
-
+*/
 
 	// Remove selector if clicking escape
 	$(document).keyup(function(event) {
+//console.log(event);
 		switch (event.keyCode) {
 			case 27: // escape
-				if ($map.mode.current !== 5) return;
+				if ($map.mode.current !== MODE_SELECT) return;
 				$map.mode.change.call(this, 1);
 			break;
 			case 46: // delete
-				if ($map.mode.current !== 1) {
+				if ($map.mode.current !== MODE_NORMAL) {
 console.log('cannot delete from mode', $map.mode.current);
 					return;
 				}
-				if (!$map.selected.length) {
+				var t = $.jstree._reference($map.selector);
+				if (!t.data.ui.selected.length) {
 console.log('nothing selected', $map.selected);
 					return;
 				}
-				console.log('deleting', $map.selected);
+				console.log('deleting', t.data.ui.selected);
 			break;
 		}
 	});//end keyup
