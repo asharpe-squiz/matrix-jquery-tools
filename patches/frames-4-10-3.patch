@@ -1,0 +1,769 @@
+diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-2/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-03-16 16:36:13.000000000 +1000
++++ ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-10-18 18:43:54.435078388 +1000
+@@ -357,7 +357,7 @@
+ 						}
+ 					$lineage_names[$asset->id] = htmlspecialchars($asset_info[$asset->id]['name'], ENT_COMPAT, SQ_CONF_DEFAULT_CHARACTER_SET);
+ 					require_once SQ_INCLUDE_PATH.'/general.inc';
+-					?><tr><td class="sq-backend-table-cell" ><a href="#" onclick="if (self.name == 'sq_wysiwyg_popup_main') {am = self;} else if (self.name == 'hipo_job') {am = opener;} else if ((typeof sq_wysiwyg_dialog != 'undefined') && (sq_wysiwyg_dialog != null) && !sq_wysiwyg_dialog.closed) { am = sq_wysiwyg_dialog; am.focus(); } else { am = parent.top.frames['sq_sidenav']; } am.asset_locator_start('<?php echo get_asset_lineage_sort_order($lineage_assetids) ?>'); tooltip.hide(); return false;"><?php echo implode(' &gt; ', $lineage_names) ?></a></td>
++					?><tr><td class="sq-backend-table-cell" ><a href="#" onclick="if (self.name == 'sq_wysiwyg_popup_main') {am = self;} else if (self.name == 'hipo_job') {am = opener;} else if ((typeof sq_wysiwyg_dialog != 'undefined') && (sq_wysiwyg_dialog != null) && !sq_wysiwyg_dialog.closed) { am = sq_wysiwyg_dialog; am.focus(); } else { am = parent.top.getFrame('sq_sidenav'); } am.asset_locator_start('<?php echo get_asset_lineage_sort_order($lineage_assetids) ?>'); tooltip.hide(); return false;"><?php echo implode(' &gt; ', $lineage_names) ?></a></td>
+ 					</tr>
+ 					<?php ;
+ 					} else {
+diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/files/file/file_edit_fns.inc ./core/assets/files/file/file_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-2/core/assets/files/file/file_edit_fns.inc	2012-05-22 18:18:53.000000000 +1000
++++ ./core/assets/files/file/file_edit_fns.inc	2012-10-18 18:44:49.889071162 +1000
+@@ -132,9 +132,9 @@
+ 						.'&sq_popups_blocked=0';
+ 				?>
+ 				<script type="text/javascript">
+-					if (parent.frames["sq_header"]) {
+-						lock_type = parent.frames["sq_main"].get_form_element_value('sq_lock_type');
+-						parent.frames["sq_header"].location = "<?php echo $url ?>" + "&sq_lock_type=" + lock_type;
++					if (top.getFrame("sq_header")) {
++						lock_type = top.getFrame("sq_main").get_form_element_value('sq_lock_type');
++						top.getFrame("sq_header").location = "<?php echo $url ?>" + "&sq_lock_type=" + lock_type;
+ 					}
+ 				</script>
+ 				<?php
+diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/trash_folder/trash_folder.inc ./core/assets/system/trash_folder/trash_folder.inc
+--- /var/www/pristine/mysource_4-10-2/core/assets/system/trash_folder/trash_folder.inc	2007-11-15 09:06:51.000000000 +1000
++++ ./core/assets/system/trash_folder/trash_folder.inc	2012-10-18 19:05:43.459340112 +1000
+@@ -119,8 +119,8 @@
+ 	{
+ 		$prefix = $this->getPrefix($this);
+ 		if (isset($_REQUEST[$prefix.'_purge_complete']) && (int)$_REQUEST[$prefix.'_purge_complete'] === 1) {
+-			$o->addOnLoad('	if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) {
+-								parent.frames["sq_sidenav"].reload_asset("'.$this->id.'");
++			$o->addOnLoad('	if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) {
++								top.getFrame("sq_sidenav").reload_asset("'.$this->id.'");
+ 							}');
+ 		}
+ 
+diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc
+--- /var/www/pristine/mysource_4-10-2/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-03-08 12:45:52.000000000 +1000
++++ ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-10-18 19:04:00.954134001 +1000
+@@ -166,7 +166,7 @@
+ 				check_box($prefix.'[immed_child]['.count($selected_assetids).']', '1', FALSE, '', 'style="margin-left:10px;"');
+ 				echo '</span>';
+ 				
+-				$map_frame_exp = trim('parent.frames["sq_sidenav"]', '.');
++				$map_frame_exp = trim('top.getFrame("sq_sidenav")', '.');
+ 				$safe_name = 'sq_asset_finder_'.preg_replace('/[^A-Za-z0-9]/', '_', $name);
+ 				
+ 				?>
+diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/users/inbox/inbox_edit_fns.inc ./core/assets/users/inbox/inbox_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-2/core/assets/users/inbox/inbox_edit_fns.inc	2008-03-05 15:59:41.000000000 +1000
++++ ./core/assets/users/inbox/inbox_edit_fns.inc	2012-10-18 18:39:16.860383954 +1000
+@@ -634,7 +634,7 @@
+ 			}
+ 		}
+ 
+-		$o->addOnLoad('if (parent.frames["sidenav"] && parent.frames["sidenav"].refresh_internal_messages) parent.frames["sidenav"].refresh_internal_messages();');
++		$o->addOnLoad('if (top.getFrame("sidenav") && top.getFrame("sidenav").refresh_internal_messages) top.getFrame("sidenav").refresh_internal_messages();');
+ 
+ 		return TRUE;
+ 
+diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_clone_assets.inc ./core/hipo/jobs/hipo_job_clone_assets.inc
+--- /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_clone_assets.inc	2009-10-08 09:12:06.000000000 +1000
++++ ./core/hipo/jobs/hipo_job_clone_assets.inc	2012-10-18 18:33:40.708089508 +1000
+@@ -798,7 +798,7 @@
+ 	{
+ 		// Only paint in the later steps (otherwise it performs a double 'get_assets' request to the asset map)
+ 		if ($step_data['percent_done'] > 0) {
+-			$o->addOnLoad('if (window.opener.parent.frames["sq_sidenav"] && window.opener.parent.frames["sq_sidenav"].reload_asset) window.opener.parent.frames["sq_sidenav"].reload_asset("'.$this->_running_vars['to_parent_assetid'].'");');
++			$o->addOnLoad('if (window.opener.top.getFrame("sq_sidenav") && window.opener.top.getFrame("sq_sidenav").reload_asset) window.opener.top.getFrame("sq_sidenav").reload_asset("'.$this->_running_vars['to_parent_assetid'].'");');
+ 		}//end if
+ 
+ 		return TRUE;
+diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_create_links.inc ./core/hipo/jobs/hipo_job_create_links.inc
+--- /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_create_links.inc	2009-09-24 16:38:25.000000000 +1000
++++ ./core/hipo/jobs/hipo_job_create_links.inc	2012-10-18 18:35:53.403250713 +1000
+@@ -1635,7 +1635,7 @@
+ 	{
+ 		// Only process in the later steps (otherwise it performs a double 'get_assets' request to the asset map)
+ 		if ($step_data['percent_done'] > 0) {
+-			$o->addOnLoad('if (window.opener.parent.frames["sq_sidenav"] && window.opener.parent.frames["sq_sidenav"].reload_asset) window.opener.parent.frames["sq_sidenav"].reload_asset("'.$this->_running_vars['to_parent_assetid'].'");');
++			$o->addOnLoad('if (window.opener.top.getFrame("sq_sidenav") && window.opener.top.getFrame("sq_sidenav").reload_asset) window.opener.top.getFrame("sq_sidenav").reload_asset("'.$this->_running_vars['to_parent_assetid'].'");');
+ 
+ 			$refreshids = Array();
+ 
+@@ -1647,7 +1647,7 @@
+ 			$refreshids = array_unique($refreshids);
+ 
+ 			foreach ($refreshids as $refreshid) {
+-				$o->addOnLoad('if (window.opener.parent.frames["sq_sidenav"] && window.opener.parent.frames["sq_sidenav"].reload_asset) window.opener.parent.frames["sq_sidenav"].reload_asset("'.$refreshid.'");');
++				$o->addOnLoad('if (window.opener.top.getFrame("sq_sidenav") && window.opener.top.getFrame("sq_sidenav").reload_asset) window.opener.top.getFrame("sq_sidenav").reload_asset("'.$refreshid.'");');
+ 			}
+ 		}//end if
+ 
+diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_manager_edit_fns.inc ./core/include/asset_manager_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-2/core/include/asset_manager_edit_fns.inc	2011-06-20 16:35:19.000000000 +1000
++++ ./core/include/asset_manager_edit_fns.inc	2012-10-18 19:27:06.318201841 +1000
+@@ -264,7 +264,7 @@
+ 				echo '<b><i>'.translate('security_key_incorrect_message', $asset->name).'</i></b>';
+ 				$o->closeSection();
+ 			} else {
+-				$o->addOnLoad('window.opener.parent.frames["sq_main"].set_hidden_field(\'sq_lock_acquire_by_force\', \'1\'); window.opener.parent.frames["sq_main"].set_hidden_field(\'sq_lock_acquire\', \'1\'); window.opener.parent.frames["sq_main"].set_hidden_field(\'sq_lock_type\', \''.addslashes($_GET['sq_lock_type']).'\'); window.opener.parent.frames["sq_main"].submit_form(); window.close();');
++				$o->addOnLoad('window.opener.top.getFrame("sq_main").set_hidden_field(\'sq_lock_acquire_by_force\', \'1\'); window.opener.top.getFrame("sq_main").set_hidden_field(\'sq_lock_acquire\', \'1\'); window.opener.top.getFrame("sq_main").set_hidden_field(\'sq_lock_type\', \''.addslashes($_GET['sq_lock_type']).'\'); window.opener.top.getFrame("sq_main").submit_form(); window.close();');
+ 				return;
+ 			}
+ 		}
+diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_static_screens/linking.inc ./core/include/asset_static_screens/linking.inc
+--- /var/www/pristine/mysource_4-10-2/core/include/asset_static_screens/linking.inc	2010-10-08 13:17:34.000000000 +1000
++++ ./core/include/asset_static_screens/linking.inc	2012-10-18 19:19:51.490422084 +1000
+@@ -490,7 +490,7 @@
+ 
+ 	// Refresh the Asset Map to show linking changes
+ 	if ($done_something) {
+-		$o->addOnLoad('if (window.top.frames["sq_sidenav"] && window.top.frames["sq_sidenav"].reload_asset) window.top.frames["sq_sidenav"].reload_asset("'.$owner->id.'");');
++		$o->addOnLoad('if (window.top.getFrame("sq_sidenav") && window.top.getFrame("sq_sidenav").reload_asset) window.top.getFrame("sq_sidenav").reload_asset("'.$owner->id.'");');
+ 	}
+ 
+ 	$cron_mgr = $GLOBALS['SQ_SYSTEM']->am->getSystemAsset('cron_manager');
+diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/include/backend.inc
+--- /var/www/pristine/mysource_4-10-2/core/include/backend.inc	2012-07-26 15:21:04.000000000 +1000
++++ ./core/include/backend.inc	2012-10-18 19:18:18.359104469 +1000
+@@ -370,7 +370,7 @@
+ 				var lock_type = '';
+ 
+ 				// get the current message div
+-				msgDiv = parent.frames["sq_main"].document.getElementById("new_message_popup");
++				msgDiv = top.getFrame("sq_main").document.getElementById("new_message_popup");
+ 
+ 				// If we are being forced to reload, due to hitting the lock
+ 				// length limit, close the current div and stop any delay
+@@ -391,13 +391,13 @@
+ 					return;
+ 				}
+ 
+-				if (parent.frames["sq_main"] && parent.frames["sq_main"].get_form_element_value && parent.frames["sq_main"].SQ_DOCUMENT_LOADED) {
+-					current_assetid = parent.frames["sq_main"].get_form_element_value('backend_assetid');
+-					lock_type       = parent.frames["sq_main"].get_form_element_value('sq_lock_type');
++				if (top.getFrame("sq_main") && top.getFrame("sq_main").get_form_element_value && top.getFrame("sq_main").SQ_DOCUMENT_LOADED) {
++					current_assetid = top.getFrame("sq_main").get_form_element_value('backend_assetid');
++					lock_type       = top.getFrame("sq_main").get_form_element_value('sq_lock_type');
+ 					<?php
+ 						if (SQ_IN_LIMBO) {
+ 					?>
+-					limbo_lock_type       = parent.frames["sq_main"].get_form_element_value('sq_limbo_lock_type');
++					limbo_lock_type       = top.getFrame("sq_main").get_form_element_value('sq_limbo_lock_type');
+ 					<?php
+ 						}//end if in limbo
+ 					?>
+@@ -437,8 +437,8 @@
+ 
+ 			if (!empty($updated_assetids)) {
+ 				$this->out->addOnLoad('
+-					if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_assets) {
+-						parent.frames["sq_sidenav"].reload_assets("'.addslashes(implode(',', $updated_assetids)).'");
++					if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_assets) {
++						top.getFrame("sq_sidenav").reload_assets("'.addslashes(implode(',', $updated_assetids)).'");
+ 					}
+ 				');
+ 			}
+@@ -484,8 +484,8 @@
+ 			$result_list = Array();
+ 			if (!is_null($searched_asset)) {
+ 				$this->out->addOnLoad('
+-					if (parent.frames["sq_main"]) {
+-						parent.frames["sq_main"].location = "'.$_SERVER['PHP_SELF'].'?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid='.urlencode($searched_asset->id).'";
++					if (top.getFrame("sq_main")) {
++						top.getFrame("sq_main").location = "'.$_SERVER['PHP_SELF'].'?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid='.urlencode($searched_asset->id).'";
+ 					}
+ 				');
+ 			} else {
+@@ -616,12 +616,12 @@
+ 						<a href="" onclick="jumpToSearchResults(current = 0); return false;" title="Go back to first page">&lt;&lt;</a> &nbsp;
+ 						<a href="" onclick="jumpToSearchResults(current = Math.max(current - '.$results_per_page.', 0)); return false;" title="Go back one page">&lt;</a> &nbsp;
+ 						<strong>( <span id="sq-search-results-page-start">1</span> - <span id="sq-search-results-page-end">'.min(count($result_list), $results_per_page).'</span> )</strong> &nbsp;
+-						<a href="" onclick="jumpToSearchResults(current = Math.min(current + '.$results_per_page.', Math.floor((parent.frames['."'sq_main'".'].keyword_search_results.length - 1) / '.$results_per_page.') * '.$results_per_page.')); return false;" title="Go forward one page">&gt;</a> &nbsp;
+-						<a href="" onclick="jumpToSearchResults(current = Math.floor((parent.frames['."'sq_main'".'].keyword_search_results.length - 1) / '.$results_per_page.') * '.$results_per_page.'); return false;" title="Go forward to last page">&gt;&gt;</a></a></div>';
++						<a href="" onclick="jumpToSearchResults(current = Math.min(current + '.$results_per_page.', Math.floor((top.getFrame('."'sq_main'".').keyword_search_results.length - 1) / '.$results_per_page.') * '.$results_per_page.')); return false;" title="Go forward one page">&gt;</a> &nbsp;
++						<a href="" onclick="jumpToSearchResults(current = Math.floor((top.getFrame('."'sq_main'".').keyword_search_results.length - 1) / '.$results_per_page.') * '.$results_per_page.'); return false;" title="Go forward to last page">&gt;&gt;</a></a></div>';
+ 					}
+ 
+ 					$i = 0;
+-					$js_code .= 'with (parent.frames["sq_main"]) { current = 0; results_per_page = '.$results_per_page.'; keyword_search_results = [];';
++					$js_code .= 'with (top.getFrame("sq_main")) { current = 0; results_per_page = '.$results_per_page.'; keyword_search_results = [];';
+ 
+ 					foreach ($result_list as $result) {
+ 						$i++;
+@@ -720,8 +720,8 @@
+ 				if (!SQ_IN_LIMBO) {
+ 				?>
+ 				// update inbox message
+-				if (parent.frames["sq_sidenav"] != null && parent.frames["sq_sidenav"].document.getElementById('sq_messages_text') != null) {
+-					parent.frames["sq_sidenav"].document.getElementById('sq_messages_text').innerHTML="<?php echo translate('inbox_new_messages', $messages, ($read_messages+$messages)); ?>";
++				if (top.getFrame("sq_sidenav") != null && top.getFrame("sq_sidenav").document.getElementById('sq_messages_text') != null) {
++					top.getFrame("sq_sidenav").document.getElementById('sq_messages_text').innerHTML="<?php echo translate('inbox_new_messages', $messages, ($read_messages+$messages)); ?>";
+ 				}
+ 				<?php
+ 				}
+@@ -750,7 +750,7 @@
+ 				function moveIt() {
+ 					to_move = Math.max(Math.min(Math.abs(divTop) * 0.08, 10), 2);
+ 					divTop += to_move;
+-					msgDiv.style.top = (divTop + parent.frames["sq_main"].document.body.scrollTop) + "px";
++					msgDiv.style.top = (divTop + top.getFrame("sq_main").document.body.scrollTop) + "px";
+ 					if (divTop >= -0.1 && myTimer != null) {
+ 						clearInterval(myTimer);
+ 
+@@ -815,7 +815,7 @@
+ 					messageIndex++;
+ 
+ 					// Remove any "search in progress" message
+-					top.frames["sq_main"].document.getElementById("sq-search-wait-popup").style.display = "none";
++					top.getFrame("sq_main").document.getElementById("sq-search-wait-popup").style.display = "none";
+ 				}
+ 
+ 				var popupContents = new Array();
+@@ -833,20 +833,20 @@
+ 				}
+ 				?>
+ 
+-				if (parent.frames["sq_main"].document.body && parent.frames["sq_main"].SQ_DOCUMENT_LOADED) {
++				if (top.getFrame("sq_main").document.body && top.getFrame("sq_main").SQ_DOCUMENT_LOADED) {
+ 
+-					msgDiv = parent.frames["sq_main"].document.getElementById("new_message_popup");
+-					screenMenu = parent.frames["sq_main"].document.getElementById("sq_screen_menu");
+-					screenMenuFiller = parent.frames["sq_main"].document.getElementById("sq_screen_menu_filler");
++					msgDiv = top.getFrame("sq_main").document.getElementById("new_message_popup");
++					screenMenu = top.getFrame("sq_main").document.getElementById("sq_screen_menu");
++					screenMenuFiller = top.getFrame("sq_main").document.getElementById("sq_screen_menu_filler");
+ 					if (msgDiv == null) {
+-						msgDiv = parent.frames["sq_main"].document.createElement("div");
++						msgDiv = top.getFrame("sq_main").document.createElement("div");
+ 						msgDiv.id = "new_message_popup";
+ 						msgDiv.style.position = "absolute";
+ 						msgDiv.style.display = "block";
+ 						msgDiv.style.top = "-1000px";
+ 						msgDiv.style.right = "-1000px";
+ 						msgDiv.style.zIndex = "10";
+-						parent.frames["sq_main"].document.body.appendChild(msgDiv);
++						top.getFrame("sq_main").document.body.appendChild(msgDiv);
+ 					}
+ 
+ 					messageIndex = 0;
+@@ -861,7 +861,7 @@
+ 						if (!popup) {
+ 							msgDiv.innerHTML = '<?php echo addslashes($dhtml_messages['popups_blocked']['html']); ?>';
+ 							setTimeout("showMsgDiv()", 500);
+-							divLeft = parent.frames["sq_main"].document.body.offsetWidth + parent.frames["sq_main"].document.body.scrollLeft - <?php echo $dhtml_messages['popups_blocked']['width']; ?> - 20;
++							divLeft = top.getFrame("sq_main").document.body.offsetWidth + top.getFrame("sq_main").document.body.scrollLeft - <?php echo $dhtml_messages['popups_blocked']['width']; ?> - 20;
+ 							msgDiv.style.width = "<?php echo addslashes($dhtml_messages['popups_blocked']['width']); ?>px";
+ 							msgDiv.style.right = "10px";
+ 							REFRESH_UPDATE = 20;
+@@ -1488,7 +1488,7 @@
+ 			// bug fix : #4831  While in Rollback mode Asset Map is hidden
+ 			// if we are in backend we dont need to worry about hiding frames
+ 			if (!SQ_DESIGN_NO_FRAME || strpos($redirect_url ,SQ_CONF_BACKEND_SUFFIX) !== FALSE) {
+-				$this->out->addOnLoad('if (!parent.frames["sq_header"]) { sq_redirect("'.$redirect_url.'"); }');
++				$this->out->addOnLoad('if (!top.getFrame("sq_header")) { sq_redirect("'.$redirect_url.'"); }');
+ 			}//end if
+ 		}
+ 
+@@ -1565,7 +1565,7 @@
+ 		}
+ 		$html .= '
+ 					<td class="sq-backend-'.$style.'-heading" nowrap="nowrap">'.$title.'</td>
+-					<td class="sq-backend-'.$style.'-heading" align="right">[<a class="sq-backend-'.$style.'-heading" href="#" onClick="Javascript: parent.frames[\'sq_header\'].cancelMsgDiv(); return false;">x</a>]</td>
++					<td class="sq-backend-'.$style.'-heading" align="right">[<a class="sq-backend-'.$style.'-heading" href="#" onClick="Javascript: top.getFrame(\'sq_header\').cancelMsgDiv(); return false;">x</a>]</td>
+ 				</tr>
+ 			';
+ 
+diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend_outputter.inc ./core/include/backend_outputter.inc
+--- /var/www/pristine/mysource_4-10-2/core/include/backend_outputter.inc	2012-06-01 12:09:02.000000000 +1000
++++ ./core/include/backend_outputter.inc	2012-10-18 19:24:05.964089219 +1000
+@@ -1027,8 +1027,8 @@
+ 							$msgs_root->addChild('message', $msg_body, Array('type' => get_bit_names('SQ_BO_MSG_', $data['type'])));
+ 						}
+ 						?>
+-						if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].add_messages) {
+-							parent.frames["sq_sidenav"].add_messages("<?php echo str_replace(Array("\r\n", "\n", "\r"), "\\n", addslashes($msgs->get())); ?>");
++						if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").add_messages) {
++							top.getFrame("sq_sidenav").add_messages("<?php echo str_replace(Array("\r\n", "\n", "\r"), "\\n", addslashes($msgs->get())); ?>");
+ 						}
+ 						<?php
+ 					}//end if messages
+@@ -1070,8 +1070,8 @@
+ 
+ 				function page_on_unload()
+ 				{
+-					if (parent.frames['sq_sidenav'] && window.self.name == 'sq_main' && parent.frames['sq_sidenav'].asset_finder_onunload) {
+-						parent.frames['sq_sidenav'].asset_finder_onunload();
++					if (top.getFrame('sq_sidenav') && window.self.name == 'sq_main' && top.getFrame('sq_sidenav').asset_finder_onunload) {
++						top.getFrame('sq_sidenav').asset_finder_onunload();
+ 					}
+ 
+ 				}//end page_on_unload()
+@@ -1107,11 +1107,11 @@
+ 					if (self.name == 'sq_header') {
+ 						// Only pop-up the "search in progress" box if there's something to search on
+ 						if (self.document.getElementById("asset_search").value != '') {
+-							top.frames["sq_main"].document.getElementById("sq-search-wait-popup").style.display = "block";
++							top.getFrame("sq_main").document.getElementById("sq-search-wait-popup").style.display = "block";
+ 						}
+ 
+-						screenMenu = top.frames["sq_main"].document.getElementById("sq_screen_menu");
+-						screenMenuFiller = top.frames["sq_main"].document.getElementById("sq_screen_menu_filler");
++						screenMenu = top.getFrame("sq_main").document.getElementById("sq_screen_menu");
++						screenMenuFiller = top.getFrame("sq_main").document.getElementById("sq_screen_menu_filler");
+ 
+ 						if (screenMenu) {
+ 							if (window.navigator.userAgent.indexOf('MSIE') > 0) {
+@@ -1705,7 +1705,7 @@
+ 	{
+ 		if (!is_null($broadcaster) && isset($broadcaster->id)) {
+ 			if (!in_array($broadcaster->id, $this->_refreshing_assets)) {
+-				$this->addOnLoad('if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) parent.frames["sq_sidenav"].reload_asset("'.$broadcaster->id.'");');
++				$this->addOnLoad('if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) top.getFrame("sq_sidenav").reload_asset("'.$broadcaster->id.'");');
+ 				$this->_refreshing_assets[] = $broadcaster->id;
+ 			}
+ 		}//end if
+@@ -1726,7 +1726,7 @@
+ 	{
+ 		if (!($broadcaster instanceof Asset)) return;
+ 		if (!in_array($broadcaster->id, $this->_refreshing_assets)) {
+-			$this->addOnLoad('if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) parent.frames["sq_sidenav"].reload_asset("'.$broadcaster->id.'");');
++			$this->addOnLoad('if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) top.getFrame("sq_sidenav").reload_asset("'.$broadcaster->id.'");');
+ 			$this->_refreshing_assets[] = $broadcaster->id;
+ 		}
+ 
+@@ -1746,7 +1746,7 @@
+ 	{
+ 		if (!($broadcaster instanceof Asset)) return;
+ 		if (!in_array($broadcaster->id, $this->_refreshing_assets)) {
+-			$this->addOnLoad('if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) parent.frames["sq_sidenav"].reload_asset("'.$broadcaster->id.'");');
++			$this->addOnLoad('if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) top.getFrame("sq_sidenav").reload_asset("'.$broadcaster->id.'");');
+ 			$this->_refreshing_assets[] = $broadcaster->id;
+ 		}
+ 
+@@ -1767,7 +1767,7 @@
+ 		if (!($broadcaster instanceof Asset)) return;
+ 		if (!in_array($broadcaster->id, $this->_refreshing_assets)) {
+ 			if ($event_data['old_type'] != $event_data['new_type']) {
+-				$this->addOnLoad('if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) parent.frames["sq_sidenav"].reload_asset("'.$broadcaster->id.'");');
++				$this->addOnLoad('if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) top.getFrame("sq_sidenav").reload_asset("'.$broadcaster->id.'");');
+ 				$this->_refreshing_assets[] = $broadcaster->id;
+ 			}
+ 		}
+@@ -1789,7 +1789,7 @@
+ 		if (!($broadcaster instanceof Asset)) return;
+ 		if (!in_array($broadcaster->id, $this->_refreshing_assets)) {
+ 			if ($event_data['old_status'] != $event_data['new_status']) {
+-				$this->addOnLoad('if (parent.frames["sq_sidenav"] && parent.frames["sq_sidenav"].reload_asset) parent.frames["sq_sidenav"].reload_asset("'.$broadcaster->id.'");');
++				$this->addOnLoad('if (top.getFrame("sq_sidenav") && top.getFrame("sq_sidenav").reload_asset) top.getFrame("sq_sidenav").reload_asset("'.$broadcaster->id.'");');
+ 				$this->_refreshing_assets[] = $broadcaster->id;
+ 			}
+ 		}
+diff -wruN /var/www/pristine/mysource_4-10-2/core/include/general.inc ./core/include/general.inc
+--- /var/www/pristine/mysource_4-10-2/core/include/general.inc	2012-08-09 15:59:35.000000000 +1000
++++ ./core/include/general.inc	2012-10-18 19:25:53.359080558 +1000
+@@ -1641,9 +1641,9 @@
+ 					am = sq_wysiwyg_dialog.frames[\'sq_wysiwyg_popup_main\'];
+ 					am.focus();
+ 				} else if ((typeof opener != \'undefined\') && (opener != null) && (!opener.closed)) {
+-					am = opener.parent.top.frames[\'sq_sidenav\'];
++					am = opener.parent.top.getFrame(\'sq_sidenav\');
+ 				} else {
+-					am = parent.top.frames[\'sq_sidenav\'];
++					am = parent.top.getFrame(\'sq_sidenav\');
+ 				}
+ 				am.asset_locator_start(\''.get_asset_lineage_sort_order($lineage_assetids).'\');';
+ 
+@@ -1708,9 +1708,9 @@
+ */
+ function asset_locator_js($asset_lineage=Array(),$map_frame='sq_sidenav', $new_window=FALSE)
+ {
+-	$finder_frame = ($new_window || empty($map_frame)) ? 'parent.top' : 'parent.frames["sq_main"]';
++	$finder_frame = ($new_window || empty($map_frame)) ? 'parent.top' : 'top.getFrame("sq_main")';
+ 	if (!empty($map_frame)) {
+-		$map_frame = trim('parent.top.frames[\''.$map_frame.'\']', '.');
++		$map_frame = trim('parent.top.getFrame(\''.$map_frame.'\')', '.');
+ 	} else {
+ 		$map_frame = 'top';
+ 	}
+diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js ./core/lib/asset_map/asset_map.js
+--- /var/www/pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js	2012-01-13 16:34:37.000000000 +1000
++++ ./core/lib/asset_map/asset_map.js	2012-10-18 19:07:16.911242885 +1000
+@@ -185,7 +185,7 @@
+ */
+ function asset_finder_change_btn_press(name, safe_name, type_codes, done_fn)
+ {
+-	resizer_frame = window.top.frames['sq_resizer'];
++	resizer_frame = window.top.getFrame('sq_resizer');
+ 
+ 	ASSET_FINDER_DONE_FUNCTION = done_fn;
+ 
+@@ -238,7 +238,7 @@
+ */
+ function asset_finder_done(params, label, url, linkid)
+ {
+-	resizer_frame = window.top.frames['sq_resizer'];
++	resizer_frame = window.top.getFrame('sq_resizer');
+ 	if (resizer_frame) {
+ 		if (ASSET_FINDER_WAS_HIDDEN && !resizer_frame.hidden) {
+ 			resizer_frame.toggleFrame();
+diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/html_form/html_form.inc ./core/lib/html_form/html_form.inc
+--- /var/www/pristine/mysource_4-10-2/core/lib/html_form/html_form.inc	2012-08-15 15:09:09.000000000 +1000
++++ ./core/lib/html_form/html_form.inc	2012-10-18 18:41:50.161085191 +1000
+@@ -777,12 +777,12 @@
+ */
+ function asset_finder($name, $assetid=0, $type_codes=Array(), $map_frame='sq_sidenav', $new_window=FALSE, $done_fn='null', $buttons=Array('clear', 'reset'))
+ {
+-	$finder_frame = ($new_window || empty($map_frame)) ? 'self' : 'parent.frames["sq_main"]';
++	$finder_frame = ($new_window || empty($map_frame)) ? 'self' : 'top.getFrame("sq_main")';
+ 	$escaped_name = str_replace('\\', '\\\\', $name);
+ 	$assetid	  = trim($assetid);
+ 
+ 	if (!empty($map_frame)) {
+-		$map_frame = trim('parent.frames["'.$map_frame.'"]', '.');
++		$map_frame = trim('top.getFrame("'.$map_frame.'")', '.');
+ 	} else {
+ 		$map_frame = 'self';
+ 	}
+@@ -826,7 +826,7 @@
+ 			normal_button($safe_name.'_reset_btn', translate('reset'), $map_frame.'.asset_finder_reset_btn_press(\''.$escaped_name.'\', \''.$safe_name.'\', \''.$assetid.'\', \''.addslashes($label).'\');');
+ 		}
+ 		?><script type="text/javascript">
+-				if (!window.top.frames['sq_resizer'] || <?php echo $map_frame; ?>.SQ_DOCUMENT_LOADED) {
++				if (!window.top.getFrame('sq_resizer') || <?php echo $map_frame; ?>.SQ_DOCUMENT_LOADED) {
+ 					<?php echo $map_frame; ?>.set_finder(<?php echo $finder_frame; ?>);
+ 				} else {
+ 					// this gets overridden when multiple asset finders exist anyway,
+@@ -874,7 +874,7 @@
+ 	$index++;
+ 
+ 	if (!empty($map_frame)) {
+-		$map_frame_exp = trim('parent.frames["'.$map_frame.'"]', '.');
++		$map_frame_exp = trim('top.getFrame("'.$map_frame.'")', '.');
+ 	} else {
+ 		$map_frame_exp = 'top';
+ 	}
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/js_calendar/js_calendar.js ./fudge/js_calendar/js_calendar.js
+--- /var/www/pristine/mysource_4-10-2/fudge/js_calendar/js_calendar.js	2012-01-18 16:23:21.000000000 +1000
++++ ./fudge/js_calendar/js_calendar.js	2012-10-18 19:28:15.003097240 +1000
+@@ -703,7 +703,7 @@
+ 				window.open(url, 'new', '');
+ 				break;
+ 			default:
+-				window.top.frames[basetags[0].target].location = url;
++				window.top.getFrame(basetags[0].target).location = url;
+ 		}
+ 	} else {
+ 		document.location.href = url;
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-10-18 19:39:14.026102839 +1000
+@@ -20,6 +20,11 @@
+ <html>
+ <head>
+ <title>Embed Movie</title>
++<script type="text/javascript">
++function getFrame(frameName) {
++	return top.frames[frameName];
++}
++</script>
+ </head>
+ <frameset rows="30,*" frameborder="0" border="0">
+ 	<frameset cols="*, 350"  frameborder="0" border="0">
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-10-18 19:43:25.686133912 +1000
+@@ -331,8 +331,8 @@
+ 					return false;
+ 				}
+ 
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'block';
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'block';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup').style.display = 'none';
+ 
+ 				return true;
+ 			}
+@@ -344,17 +344,17 @@
+ 			var interval;
+ 
+ 			// Reset variables in the main frame
+-			top.frames['sq_wysiwyg_popup_main'].total_results = <?php echo count($results); ?>;
+-			top.frames['sq_wysiwyg_popup_main'].current = 1;
++			top.getFrame('sq_wysiwyg_popup_main').total_results = <?php echo count($results); ?>;
++			top.getFrame('sq_wysiwyg_popup_main').current = 1;
+ 
+ 			function show_search_results()
+ 			{
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'none';
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
+-				var results_box_text = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-details');
+-				var results_box_title = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-title');
+-				var results_box_titlebar = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-titlebar');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
++				var results_box_text = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-details');
++				var results_box_title = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-title');
++				var results_box_titlebar = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-titlebar');
+ 
+ 				var html = '<?php echo addslashes($html) ?>';
+ 				var title_html = '<?php echo addslashes($box_title) ?>';
+@@ -384,7 +384,7 @@
+ 				move = Math.max(Math.min(Math.abs(counter) * 0.08, 10), 2);
+ 				counter -= move;
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
+ 				results_box.style.top = -counter + 'px';
+ 
+ 				if (counter <= 0) {
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-10-18 19:35:38.427223690 +1000
+@@ -20,6 +20,11 @@
+ <html>
+ <head>
+ <title>Embed YouTube</title>
++<script type="text/javascript">
++function getFrame(frameName) {
++	return top.frames[frameName];
++}
++</script>
+ </head>
+ <frameset rows="30,*" frameborder="0" border="0">
+ 	<frame src="embed_youtube_title.php" name="sq_wysiwyg_popup_title" scrolling="no" marginwidth="0" marginheight="0" noresize="noresize" />
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-10-18 19:37:19.231746705 +1000
+@@ -330,8 +330,8 @@
+ 					return false;
+ 				}
+ 
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'block';
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'block';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup').style.display = 'none';
+ 
+ 				return true;
+ 			}
+@@ -343,17 +343,17 @@
+ 			var interval;
+ 
+ 			// Reset variables in the main frame
+-			top.frames['sq_wysiwyg_popup_main'].total_results = <?php echo count($results); ?>;
+-			top.frames['sq_wysiwyg_popup_main'].current = 1;
++			top.getFrame('sq_wysiwyg_popup_main').total_results = <?php echo count($results); ?>;
++			top.getFrame('sq_wysiwyg_popup_main').current = 1;
+ 
+ 			function show_search_results()
+ 			{
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'none';
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
+-				var results_box_text = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-details');
+-				var results_box_title = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-title');
+-				var results_box_titlebar = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-titlebar');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
++				var results_box_text = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-details');
++				var results_box_title = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-title');
++				var results_box_titlebar = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-titlebar');
+ 
+ 				var html = '<?php echo addslashes($html) ?>';
+ 				var title_html = '<?php echo addslashes($box_title) ?>';
+@@ -383,7 +383,7 @@
+ 				move = Math.max(Math.min(Math.abs(counter) * 0.08, 10), 2);
+ 				counter -= move;
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
+ 				results_box.style.top = -counter + 'px';
+ 
+ 				if (counter <= 0) {
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-10-18 19:34:53.901227153 +1000
+@@ -20,6 +20,11 @@
+ <html>
+ <head>
+ <title>Insert Image</title>
++<script type="text/javascript">
++function getFrame(frameName) {
++	return top.frames[frameName];
++}
++</script>
+ </head>
+ <frameset rows="30,*" frameborder="0" border="0">
+ 	<frameset cols="*, 400"  frameborder="0" border="0">
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-10-18 19:30:52.945122719 +1000
+@@ -339,8 +339,8 @@
+ 					return false;
+ 				}
+ 
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'block';
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'block';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup').style.display = 'none';
+ 
+ 				return true;
+ 			}
+@@ -352,17 +352,17 @@
+ 			var interval;
+ 
+ 			// Reset variables in the main frame
+-			top.frames['sq_wysiwyg_popup_main'].total_results = <?php echo count($results); ?>;
+-			top.frames['sq_wysiwyg_popup_main'].current = 1;
++			top.getFrame('sq_wysiwyg_popup_main').total_results = <?php echo count($results); ?>;
++			top.getFrame('sq_wysiwyg_popup_main').current = 1;
+ 
+ 			function show_search_results()
+ 			{
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'none';
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
+-				var results_box_text = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-details');
+-				var results_box_title = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-title');
+-				var results_box_titlebar = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-titlebar');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
++				var results_box_text = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-details');
++				var results_box_title = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-title');
++				var results_box_titlebar = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-titlebar');
+ 
+ 				var html = '<?php echo addslashes($html) ?>';
+ 				var title_html = '<?php echo addslashes($box_title) ?>';
+@@ -392,7 +392,7 @@
+ 				move = Math.max(Math.min(Math.abs(counter) * 0.08, 10), 2);
+ 				counter -= move;
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
+ 				results_box.style.top = -counter + 'px';
+ 
+ 				if (counter <= 0) {
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-06-01 12:09:06.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-10-18 19:31:57.857098019 +1000
+@@ -89,11 +89,11 @@
+ 			?>
+ 			<html><head>
+ 			<script type="text/javascript">
+-				top.frames['sq_wysiwyg_popup_main'].toggleCreateImage();
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('sq_asset_finder_f_imageid_assetid').value = "<?php echo $new_image->id; ?>";
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('sq_asset_finder_f_imageid_label').value = "<?php echo $new_image->short_name; ?>";
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('f_imageid[assetid]').value = "<?php echo $new_image->id; ?>";
+-				top.frames['sq_wysiwyg_popup_main'].setImageInfo();
++				top.getFrame('sq_wysiwyg_popup_main').toggleCreateImage();
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('sq_asset_finder_f_imageid_assetid').value = "<?php echo $new_image->id; ?>";
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('sq_asset_finder_f_imageid_label').value = "<?php echo $new_image->short_name; ?>";
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('f_imageid[assetid]').value = "<?php echo $new_image->id; ?>";
++				top.getFrame('sq_wysiwyg_popup_main').setImageInfo();
+ 			</script>
+ 			</head>
+ 			<body></body>
+@@ -160,9 +160,9 @@
+ 		?>
+ 		<html><head>
+ 		<script type="text/javascript">
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('show_upload_error').style.display = "block";	
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('show_upload_error').style.visibility = "visible";	
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('show_upload_error').innerHTML = "<?php echo $error ?>";
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('show_upload_error').style.display = "block";
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('show_upload_error').style.visibility = "visible";
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('show_upload_error').innerHTML = "<?php echo $error ?>";
+ 		</script>
+ 		</head>
+ 		<body></body>
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-07-26 15:45:59.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-10-18 19:34:43.050095038 +1000
+@@ -20,6 +20,11 @@
+ <html>
+ <head>
+ <title>Insert Link</title>
++<script type="text/javascript">
++function getFrame(frameName) {
++	return top.frames[frameName];
++}
++</script>
+ </head>
+ <frameset rows="30,*" frameborder="0" border="0">
+ 	<frameset cols="*, 300"  frameborder="0" border="0">
+diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php
+--- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-10-18 19:33:44.937082231 +1000
+@@ -331,8 +331,8 @@
+ 					return false;
+ 				}
+ 
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'block';
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'block';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup').style.display = 'none';
+ 
+ 				return true;
+ 			}
+@@ -344,17 +344,17 @@
+ 			var interval;
+ 
+ 			// Reset variables in the main frame
+-			top.frames['sq_wysiwyg_popup_main'].total_results = <?php echo count($results); ?>;
+-			top.frames['sq_wysiwyg_popup_main'].current = 1;
++			top.getFrame('sq_wysiwyg_popup_main').total_results = <?php echo count($results); ?>;
++			top.getFrame('sq_wysiwyg_popup_main').current = 1;
+ 
+ 			function show_search_results()
+ 			{
+-				top.frames['sq_wysiwyg_popup_main'].document.getElementById('search-wait-popup').style.display = 'none';
++				top.getFrame('sq_wysiwyg_popup_main').document.getElementById('search-wait-popup').style.display = 'none';
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
+-				var results_box_text = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-details');
+-				var results_box_title = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-title');
+-				var results_box_titlebar = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup-titlebar');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
++				var results_box_text = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-details');
++				var results_box_title = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-title');
++				var results_box_titlebar = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup-titlebar');
+ 
+ 				var html = '<?php echo addslashes($html) ?>';
+ 				var title_html = '<?php echo addslashes($box_title) ?>';
+@@ -384,7 +384,7 @@
+ 				move = Math.max(Math.min(Math.abs(counter) * 0.08, 10), 2);
+ 				counter -= move;
+ 
+-				var results_box = top.frames['sq_wysiwyg_popup_main'].document.getElementById('new-message-popup');
++				var results_box = top.getFrame('sq_wysiwyg_popup_main').document.getElementById('new-message-popup');
+ 				results_box.style.top = -counter + 'px';
+ 
+ 				if (counter <= 0) {
+diff -wruN /var/www/pristine/mysource_4-10-2/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc
+--- /var/www/pristine/mysource_4-10-2/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-02-16 13:47:36.000000000 +1000
++++ ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-10-18 19:40:25.977179878 +1000
+@@ -152,7 +152,7 @@
+ 			echo translate('tool_export_assets_to_xml_target_parent');
+ 			text_box($type_code.'_target_parent[0]', '1', '1', '', '', 'style="margin-left:10px;"');
+ 			echo '</span>';
+-			$map_frame_exp = trim('parent.frames["sq_sidenav"]', '.');
++			$map_frame_exp = trim('top.getFrame("sq_sidenav")', '.');
+ 			$name =$type_code.'_root_node';
+ 			$safe_name = 'sq_asset_finder_'.preg_replace('/[^A-Za-z0-9]/', '_', $name);
+ 			?>
+--- core/include/backend.inc.orig.patched	2012-10-25 20:43:20.761194348 +1000
++++ core/include/backend.inc	2012-10-25 20:47:08.498192665 +1000
+@@ -289,6 +289,14 @@
+ 					<?php
+ 				}
+ 				?>
++				<script type="text/javascript">
++				<!-- see http://stackoverflow.com/questions/66837/when-is-a-cdata-section-necessary-within-a-script-tag -->
++				//<![CDATA[
++					function getFrame(framename) {
++						return window.frames[framename];
++					}
++				//]]>
++				</script>
+ 			</head>
+ 			<?php
+ 			if (!$limbo_hipo) {
