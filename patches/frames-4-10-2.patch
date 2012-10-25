@@ -1,6 +1,6 @@
-diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc
---- /var/www/pristine/mysource_4-10-2/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-03-16 16:36:13.000000000 +1000
-+++ ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-10-18 18:43:54.435078388 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-3/core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-03-16 16:36:13.000000000 +1000
++++ ./core/assets/bodycopy/bodycopy_containers/bodycopy_div/bodycopy_div_edit_fns.inc	2012-10-25 20:50:46.467213103 +1000
 @@ -357,7 +357,7 @@
  						}
  					$lineage_names[$asset->id] = htmlspecialchars($asset_info[$asset->id]['name'], ENT_COMPAT, SQ_CONF_DEFAULT_CHARACTER_SET);
@@ -10,9 +10,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/bodycopy/bodycopy_conta
  					</tr>
  					<?php ;
  					} else {
-diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/files/file/file_edit_fns.inc ./core/assets/files/file/file_edit_fns.inc
---- /var/www/pristine/mysource_4-10-2/core/assets/files/file/file_edit_fns.inc	2012-05-22 18:18:53.000000000 +1000
-+++ ./core/assets/files/file/file_edit_fns.inc	2012-10-18 18:44:49.889071162 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/assets/files/file/file_edit_fns.inc ./core/assets/files/file/file_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-3/core/assets/files/file/file_edit_fns.inc	2012-05-22 18:18:53.000000000 +1000
++++ ./core/assets/files/file/file_edit_fns.inc	2012-10-25 20:50:46.469268910 +1000
 @@ -132,9 +132,9 @@
  						.'&sq_popups_blocked=0';
  				?>
@@ -26,9 +26,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/files/file/file_edit_fn
  					}
  				</script>
  				<?php
-diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/trash_folder/trash_folder.inc ./core/assets/system/trash_folder/trash_folder.inc
---- /var/www/pristine/mysource_4-10-2/core/assets/system/trash_folder/trash_folder.inc	2007-11-15 09:06:51.000000000 +1000
-+++ ./core/assets/system/trash_folder/trash_folder.inc	2012-10-18 19:05:43.459340112 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/assets/system/trash_folder/trash_folder.inc ./core/assets/system/trash_folder/trash_folder.inc
+--- /var/www/pristine/mysource_4-10-3/core/assets/system/trash_folder/trash_folder.inc	2007-11-15 09:06:51.000000000 +1000
++++ ./core/assets/system/trash_folder/trash_folder.inc	2012-10-25 20:50:46.470241606 +1000
 @@ -119,8 +119,8 @@
  	{
  		$prefix = $this->getPrefix($this);
@@ -40,9 +40,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/trash_folder/tra
  							}');
  		}
  
-diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc
---- /var/www/pristine/mysource_4-10-2/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-03-08 12:45:52.000000000 +1000
-+++ ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-10-18 19:04:00.954134001 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc
+--- /var/www/pristine/mysource_4-10-3/core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-03-08 12:45:52.000000000 +1000
++++ ./core/assets/system/triggers/trigger_condition_types/trigger_condition_tree_location/trigger_condition_tree_location.inc	2012-10-25 20:50:46.470241606 +1000
 @@ -166,7 +166,7 @@
  				check_box($prefix.'[immed_child]['.count($selected_assetids).']', '1', FALSE, '', 'style="margin-left:10px;"');
  				echo '</span>';
@@ -52,9 +52,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/system/triggers/trigger
  				$safe_name = 'sq_asset_finder_'.preg_replace('/[^A-Za-z0-9]/', '_', $name);
  				
  				?>
-diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/users/inbox/inbox_edit_fns.inc ./core/assets/users/inbox/inbox_edit_fns.inc
---- /var/www/pristine/mysource_4-10-2/core/assets/users/inbox/inbox_edit_fns.inc	2008-03-05 15:59:41.000000000 +1000
-+++ ./core/assets/users/inbox/inbox_edit_fns.inc	2012-10-18 18:39:16.860383954 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/assets/users/inbox/inbox_edit_fns.inc ./core/assets/users/inbox/inbox_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-3/core/assets/users/inbox/inbox_edit_fns.inc	2008-03-05 15:59:41.000000000 +1000
++++ ./core/assets/users/inbox/inbox_edit_fns.inc	2012-10-25 20:50:46.472111640 +1000
 @@ -634,7 +634,7 @@
  			}
  		}
@@ -64,9 +64,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/assets/users/inbox/inbox_edit_
  
  		return TRUE;
  
-diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_clone_assets.inc ./core/hipo/jobs/hipo_job_clone_assets.inc
---- /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_clone_assets.inc	2009-10-08 09:12:06.000000000 +1000
-+++ ./core/hipo/jobs/hipo_job_clone_assets.inc	2012-10-18 18:33:40.708089508 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/hipo/jobs/hipo_job_clone_assets.inc ./core/hipo/jobs/hipo_job_clone_assets.inc
+--- /var/www/pristine/mysource_4-10-3/core/hipo/jobs/hipo_job_clone_assets.inc	2009-10-08 09:12:06.000000000 +1000
++++ ./core/hipo/jobs/hipo_job_clone_assets.inc	2012-10-25 20:50:46.473113086 +1000
 @@ -798,7 +798,7 @@
  	{
  		// Only paint in the later steps (otherwise it performs a double 'get_assets' request to the asset map)
@@ -76,9 +76,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_clone_asset
  		}//end if
  
  		return TRUE;
-diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_create_links.inc ./core/hipo/jobs/hipo_job_create_links.inc
---- /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_create_links.inc	2009-09-24 16:38:25.000000000 +1000
-+++ ./core/hipo/jobs/hipo_job_create_links.inc	2012-10-18 18:35:53.403250713 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/hipo/jobs/hipo_job_create_links.inc ./core/hipo/jobs/hipo_job_create_links.inc
+--- /var/www/pristine/mysource_4-10-3/core/hipo/jobs/hipo_job_create_links.inc	2009-09-24 16:38:25.000000000 +1000
++++ ./core/hipo/jobs/hipo_job_create_links.inc	2012-10-25 20:50:46.473113086 +1000
 @@ -1635,7 +1635,7 @@
  	{
  		// Only process in the later steps (otherwise it performs a double 'get_assets' request to the asset map)
@@ -97,9 +97,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/hipo/jobs/hipo_job_create_link
  			}
  		}//end if
  
-diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_manager_edit_fns.inc ./core/include/asset_manager_edit_fns.inc
---- /var/www/pristine/mysource_4-10-2/core/include/asset_manager_edit_fns.inc	2011-06-20 16:35:19.000000000 +1000
-+++ ./core/include/asset_manager_edit_fns.inc	2012-10-18 19:27:06.318201841 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/include/asset_manager_edit_fns.inc ./core/include/asset_manager_edit_fns.inc
+--- /var/www/pristine/mysource_4-10-3/core/include/asset_manager_edit_fns.inc	2011-06-20 16:35:19.000000000 +1000
++++ ./core/include/asset_manager_edit_fns.inc	2012-10-25 20:50:46.476122542 +1000
 @@ -264,7 +264,7 @@
  				echo '<b><i>'.translate('security_key_incorrect_message', $asset->name).'</i></b>';
  				$o->closeSection();
@@ -109,9 +109,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_manager_edit_fns
  				return;
  			}
  		}
-diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_static_screens/linking.inc ./core/include/asset_static_screens/linking.inc
---- /var/www/pristine/mysource_4-10-2/core/include/asset_static_screens/linking.inc	2010-10-08 13:17:34.000000000 +1000
-+++ ./core/include/asset_static_screens/linking.inc	2012-10-18 19:19:51.490422084 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/include/asset_static_screens/linking.inc ./core/include/asset_static_screens/linking.inc
+--- /var/www/pristine/mysource_4-10-3/core/include/asset_static_screens/linking.inc	2010-10-08 13:17:34.000000000 +1000
++++ ./core/include/asset_static_screens/linking.inc	2012-10-25 20:50:46.476122542 +1000
 @@ -490,7 +490,7 @@
  
  	// Refresh the Asset Map to show linking changes
@@ -121,10 +121,25 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/asset_static_screens/l
  	}
  
  	$cron_mgr = $GLOBALS['SQ_SYSTEM']->am->getSystemAsset('cron_manager');
-diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/include/backend.inc
---- /var/www/pristine/mysource_4-10-2/core/include/backend.inc	2012-07-26 15:21:04.000000000 +1000
-+++ ./core/include/backend.inc	2012-10-18 19:18:18.359104469 +1000
-@@ -370,7 +370,7 @@
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/include/backend.inc ./core/include/backend.inc
+--- /var/www/pristine/mysource_4-10-3/core/include/backend.inc	2012-07-26 15:21:04.000000000 +1000
++++ ./core/include/backend.inc	2012-10-25 20:50:46.501107348 +1000
+@@ -289,6 +289,14 @@
+ 					<?php
+ 				}
+ 				?>
++				<script type="text/javascript">
++				<!-- see http://stackoverflow.com/questions/66837/when-is-a-cdata-section-necessary-within-a-script-tag -->
++				//<![CDATA[
++					function getFrame(framename) {
++						return window.frames[framename];
++					}
++				//]]>
++				</script>
+ 			</head>
+ 			<?php
+ 			if (!$limbo_hipo) {
+@@ -370,7 +378,7 @@
  				var lock_type = '';
  
  				// get the current message div
@@ -133,7 +148,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  
  				// If we are being forced to reload, due to hitting the lock
  				// length limit, close the current div and stop any delay
-@@ -391,13 +391,13 @@
+@@ -391,13 +399,13 @@
  					return;
  				}
  
@@ -151,7 +166,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  					<?php
  						}//end if in limbo
  					?>
-@@ -437,8 +437,8 @@
+@@ -437,8 +445,8 @@
  
  			if (!empty($updated_assetids)) {
  				$this->out->addOnLoad('
@@ -162,7 +177,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  					}
  				');
  			}
-@@ -484,8 +484,8 @@
+@@ -484,8 +492,8 @@
  			$result_list = Array();
  			if (!is_null($searched_asset)) {
  				$this->out->addOnLoad('
@@ -173,7 +188,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  					}
  				');
  			} else {
-@@ -616,12 +616,12 @@
+@@ -616,12 +624,12 @@
  						<a href="" onclick="jumpToSearchResults(current = 0); return false;" title="Go back to first page">&lt;&lt;</a> &nbsp;
  						<a href="" onclick="jumpToSearchResults(current = Math.max(current - '.$results_per_page.', 0)); return false;" title="Go back one page">&lt;</a> &nbsp;
  						<strong>( <span id="sq-search-results-page-start">1</span> - <span id="sq-search-results-page-end">'.min(count($result_list), $results_per_page).'</span> )</strong> &nbsp;
@@ -189,7 +204,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  
  					foreach ($result_list as $result) {
  						$i++;
-@@ -720,8 +720,8 @@
+@@ -720,8 +728,8 @@
  				if (!SQ_IN_LIMBO) {
  				?>
  				// update inbox message
@@ -200,7 +215,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  				}
  				<?php
  				}
-@@ -750,7 +750,7 @@
+@@ -750,7 +758,7 @@
  				function moveIt() {
  					to_move = Math.max(Math.min(Math.abs(divTop) * 0.08, 10), 2);
  					divTop += to_move;
@@ -209,7 +224,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  					if (divTop >= -0.1 && myTimer != null) {
  						clearInterval(myTimer);
  
-@@ -815,7 +815,7 @@
+@@ -815,7 +823,7 @@
  					messageIndex++;
  
  					// Remove any "search in progress" message
@@ -218,7 +233,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  				}
  
  				var popupContents = new Array();
-@@ -833,20 +833,20 @@
+@@ -833,20 +841,20 @@
  				}
  				?>
  
@@ -245,7 +260,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  					}
  
  					messageIndex = 0;
-@@ -861,7 +861,7 @@
+@@ -861,7 +869,7 @@
  						if (!popup) {
  							msgDiv.innerHTML = '<?php echo addslashes($dhtml_messages['popups_blocked']['html']); ?>';
  							setTimeout("showMsgDiv()", 500);
@@ -254,7 +269,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  							msgDiv.style.width = "<?php echo addslashes($dhtml_messages['popups_blocked']['width']); ?>px";
  							msgDiv.style.right = "10px";
  							REFRESH_UPDATE = 20;
-@@ -1488,7 +1488,7 @@
+@@ -1488,7 +1496,7 @@
  			// bug fix : #4831  While in Rollback mode Asset Map is hidden
  			// if we are in backend we dont need to worry about hiding frames
  			if (!SQ_DESIGN_NO_FRAME || strpos($redirect_url ,SQ_CONF_BACKEND_SUFFIX) !== FALSE) {
@@ -263,7 +278,7 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  			}//end if
  		}
  
-@@ -1565,7 +1565,7 @@
+@@ -1565,7 +1573,7 @@
  		}
  		$html .= '
  					<td class="sq-backend-'.$style.'-heading" nowrap="nowrap">'.$title.'</td>
@@ -272,9 +287,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend.inc ./core/inc
  				</tr>
  			';
  
-diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend_outputter.inc ./core/include/backend_outputter.inc
---- /var/www/pristine/mysource_4-10-2/core/include/backend_outputter.inc	2012-06-01 12:09:02.000000000 +1000
-+++ ./core/include/backend_outputter.inc	2012-10-18 19:24:05.964089219 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/include/backend_outputter.inc ./core/include/backend_outputter.inc
+--- /var/www/pristine/mysource_4-10-3/core/include/backend_outputter.inc	2012-06-01 12:09:02.000000000 +1000
++++ ./core/include/backend_outputter.inc	2012-10-25 20:50:46.480111480 +1000
 @@ -1027,8 +1027,8 @@
  							$msgs_root->addChild('message', $msg_body, Array('type' => get_bit_names('SQ_BO_MSG_', $data['type'])));
  						}
@@ -357,9 +372,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/backend_outputter.inc 
  				$this->_refreshing_assets[] = $broadcaster->id;
  			}
  		}
-diff -wruN /var/www/pristine/mysource_4-10-2/core/include/general.inc ./core/include/general.inc
---- /var/www/pristine/mysource_4-10-2/core/include/general.inc	2012-08-09 15:59:35.000000000 +1000
-+++ ./core/include/general.inc	2012-10-18 19:25:53.359080558 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/include/general.inc ./core/include/general.inc
+--- /var/www/pristine/mysource_4-10-3/core/include/general.inc	2012-09-26 14:36:10.000000000 +1000
++++ ./core/include/general.inc	2012-10-25 20:50:46.481146459 +1000
 @@ -1641,9 +1641,9 @@
  					am = sq_wysiwyg_dialog.frames[\'sq_wysiwyg_popup_main\'];
  					am.focus();
@@ -384,9 +399,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/include/general.inc ./core/inc
  	} else {
  		$map_frame = 'top';
  	}
-diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js ./core/lib/asset_map/asset_map.js
---- /var/www/pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js	2012-01-13 16:34:37.000000000 +1000
-+++ ./core/lib/asset_map/asset_map.js	2012-10-18 19:07:16.911242885 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/lib/asset_map/asset_map.js ./core/lib/asset_map/asset_map.js
+--- /var/www/pristine/mysource_4-10-3/core/lib/asset_map/asset_map.js	2012-01-13 16:34:37.000000000 +1000
++++ ./core/lib/asset_map/asset_map.js	2012-10-25 20:50:46.484149037 +1000
 @@ -185,7 +185,7 @@
  */
  function asset_finder_change_btn_press(name, safe_name, type_codes, done_fn)
@@ -405,9 +420,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/asset_map/asset_map.js ./c
  	if (resizer_frame) {
  		if (ASSET_FINDER_WAS_HIDDEN && !resizer_frame.hidden) {
  			resizer_frame.toggleFrame();
-diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/html_form/html_form.inc ./core/lib/html_form/html_form.inc
---- /var/www/pristine/mysource_4-10-2/core/lib/html_form/html_form.inc	2012-08-15 15:09:09.000000000 +1000
-+++ ./core/lib/html_form/html_form.inc	2012-10-18 18:41:50.161085191 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/core/lib/html_form/html_form.inc ./core/lib/html_form/html_form.inc
+--- /var/www/pristine/mysource_4-10-3/core/lib/html_form/html_form.inc	2012-08-15 15:09:09.000000000 +1000
++++ ./core/lib/html_form/html_form.inc	2012-10-25 20:50:46.485191473 +1000
 @@ -777,12 +777,12 @@
  */
  function asset_finder($name, $assetid=0, $type_codes=Array(), $map_frame='sq_sidenav', $new_window=FALSE, $done_fn='null', $buttons=Array('clear', 'reset'))
@@ -441,9 +456,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/core/lib/html_form/html_form.inc ./
  	} else {
  		$map_frame_exp = 'top';
  	}
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/js_calendar/js_calendar.js ./fudge/js_calendar/js_calendar.js
---- /var/www/pristine/mysource_4-10-2/fudge/js_calendar/js_calendar.js	2012-01-18 16:23:21.000000000 +1000
-+++ ./fudge/js_calendar/js_calendar.js	2012-10-18 19:28:15.003097240 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/js_calendar/js_calendar.js ./fudge/js_calendar/js_calendar.js
+--- /var/www/pristine/mysource_4-10-3/fudge/js_calendar/js_calendar.js	2012-01-18 16:23:21.000000000 +1000
++++ ./fudge/js_calendar/js_calendar.js	2012-10-25 20:50:46.486099779 +1000
 @@ -703,7 +703,7 @@
  				window.open(url, 'new', '');
  				break;
@@ -453,9 +468,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/js_calendar/js_calendar.js ./
  		}
  	} else {
  		document.location.href = url;
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-07-26 15:21:13.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-10-18 19:39:14.026102839 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_frames.php	2012-10-25 20:50:46.488116390 +1000
 @@ -20,6 +20,11 @@
  <html>
  <head>
@@ -468,9 +483,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_
  </head>
  <frameset rows="30,*" frameborder="0" border="0">
  	<frameset cols="*, 350"  frameborder="0" border="0">
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-08-15 15:08:14.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-10-18 19:43:25.686133912 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_movie/embed_movie_search.php	2012-10-25 20:50:46.490116609 +1000
 @@ -331,8 +331,8 @@
  					return false;
  				}
@@ -516,9 +531,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_
  				results_box.style.top = -counter + 'px';
  
  				if (counter <= 0) {
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-07-26 15:21:13.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-10-18 19:35:38.427223690 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_frames.php	2012-10-25 20:50:46.493137273 +1000
 @@ -20,6 +20,11 @@
  <html>
  <head>
@@ -531,9 +546,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_
  </head>
  <frameset rows="30,*" frameborder="0" border="0">
  	<frame src="embed_youtube_title.php" name="sq_wysiwyg_popup_title" scrolling="no" marginwidth="0" marginheight="0" noresize="noresize" />
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-08-15 15:08:14.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-10-18 19:37:19.231746705 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_embed_youtube/embed_youtube_search.php	2012-10-25 20:50:46.493137273 +1000
 @@ -330,8 +330,8 @@
  					return false;
  				}
@@ -579,9 +594,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_embed_
  				results_box.style.top = -counter + 'px';
  
  				if (counter <= 0) {
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-07-26 15:21:13.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-10-18 19:34:53.901227153 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-07-26 15:21:13.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_frames.php	2012-10-25 20:50:46.494185233 +1000
 @@ -20,6 +20,11 @@
  <html>
  <head>
@@ -594,9 +609,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert
  </head>
  <frameset rows="30,*" frameborder="0" border="0">
  	<frameset cols="*, 400"  frameborder="0" border="0">
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-08-15 15:08:14.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-10-18 19:30:52.945122719 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/insert_image_search.php	2012-10-25 20:50:46.494185233 +1000
 @@ -339,8 +339,8 @@
  					return false;
  				}
@@ -642,9 +657,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert
  				results_box.style.top = -counter + 'px';
  
  				if (counter <= 0) {
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-06-01 12:09:06.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-10-18 19:31:57.857098019 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-06-01 12:09:06.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_image/upload_image.php	2012-10-25 20:50:46.496131084 +1000
 @@ -89,11 +89,11 @@
  			?>
  			<html><head>
@@ -675,9 +690,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert
  		</script>
  		</head>
  		<body></body>
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-07-26 15:45:59.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-10-18 19:34:43.050095038 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-07-26 15:45:59.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_frames.php	2012-10-25 20:50:46.497195449 +1000
 @@ -20,6 +20,11 @@
  <html>
  <head>
@@ -690,9 +705,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert
  </head>
  <frameset rows="30,*" frameborder="0" border="0">
  	<frameset cols="*, 300"  frameborder="0" border="0">
-diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php
---- /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-08-15 15:08:14.000000000 +1000
-+++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-10-18 19:33:44.937082231 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php
+--- /var/www/pristine/mysource_4-10-3/fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-08-15 15:08:14.000000000 +1000
++++ ./fudge/wysiwyg/plugins/matrix_insert_link/insert_link_search.php	2012-10-25 20:50:46.497195449 +1000
 @@ -331,8 +331,8 @@
  					return false;
  				}
@@ -738,9 +753,9 @@ diff -wruN /var/www/pristine/mysource_4-10-2/fudge/wysiwyg/plugins/matrix_insert
  				results_box.style.top = -counter + 'px';
  
  				if (counter <= 0) {
-diff -wruN /var/www/pristine/mysource_4-10-2/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc
---- /var/www/pristine/mysource_4-10-2/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-02-16 13:47:36.000000000 +1000
-+++ ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-10-18 19:40:25.977179878 +1000
+diff --exclude=Oven --exclude=data --exclude=cache -wruN /var/www/pristine/mysource_4-10-3/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc
+--- /var/www/pristine/mysource_4-10-3/packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-02-16 13:47:36.000000000 +1000
++++ ./packages/import_tools/tool_export_assets_to_xml/tool_export_assets_to_xml.inc	2012-10-25 20:50:46.500143697 +1000
 @@ -152,7 +152,7 @@
  			echo translate('tool_export_assets_to_xml_target_parent');
  			text_box($type_code.'_target_parent[0]', '1', '1', '', '', 'style="margin-left:10px;"');
