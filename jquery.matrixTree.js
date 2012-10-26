@@ -113,38 +113,14 @@ console.log('info', t.data.dnd);
 		},
 		items: {
 			move: {
-				name: $matrix.util.translate('asset_map_menu_move_here'),
-//				callback: function(key, options) {
-//					if (!(options.$target && $map.selected.length)) {
-//						alert($matrix.util.translate('asset_map_error_invalid_node'));
-//						return;
-//					}
-//
-//					$matrix.backend.moveAssets($map.selected, options.$target);
-//				}
+				name: $matrix.util.translate('asset_map_menu_move_here')
 			},
 			newlink: {
-				name: $matrix.util.translate('asset_map_menu_link_here'),
-//				callback: function(key, options) {
-//					if (!(options.$target && $map.selected.length)) {
-//						alert($matrix.util.translate('asset_map_error_invalid_node'));
-//						return;
-//					}
-//
-//					$matrix.backend.linkAssets($map.selected, options.$target);
-//				}
+				name: $matrix.util.translate('asset_map_menu_link_here')
 			},
 			clone: {
 				name: $matrix.util.translate('asset_map_menu_clone_here'),
-				disabled: true,
-//				callback: function(key, options) {
-//					if (!(options.$target && $map.selected.length)) {
-//						alert($matrix.util.translate('asset_map_error_invalid_node'));
-//						return;
-//					}
-//
-//					$matrix.backend.cloneAssets($map.selected, options.$target);
-//				}
+				disabled: true
 			},
 			sep: '-',
 			cancel: {

@@ -57,7 +57,6 @@ class Backend_OutputterJS extends Backend_Outputter {
 		$this->addJSInclude(sq_web_path('lib') . '/asset_map/asset_map.js');
 
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.css');
-		$this->addCssInclude(sq_web_path('lib') . '/jsmap/matrixMap.css');
 
 		$this->addJSInclude(sq_web_path('root_url') . '/dev/jstree/jquery.jstree.js');
 
