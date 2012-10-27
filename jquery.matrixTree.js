@@ -731,12 +731,12 @@ init = $(xml);
 								},
 
 								stop: function (event, ui) {
-//console.log('stop', arguments);
 									// see http://bugs.jqueryui.com/ticket/3176
 									$('#resize_iframe_cover').remove();
 
 									// see http://forum.jquery.com/topic/resizable-ignore-height-change-on-horizontal-resize
 									ui.element.css({ height: null });
+									$assetMap.css({ height: 'auto' });
 
 									// make sure we finish up with reasonable defaults
 									var offset = $cResizer.get(0).offsetLeft;

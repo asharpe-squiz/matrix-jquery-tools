@@ -364,85 +364,86 @@ class BackendJS extends Backend {
 						</td>
 					</tr>
 				</table>
-				<div id="resize_container" style="position:static !important">
-					<div id="asset_map" style="position: absolute; top: 47px; left: 6px; visibility: visible; border-top: 0px none; border-left: 0px none; width: <?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH'); ?>px">
-					</div>
-					<!-- resizer as a div to ease the use of jquery-ui resizable -->
-					<div id="sq_resizer" class="ui-resizable-handle ui-resizable-e" style="border:0;height:100%;width:10px;position:absolute;top:0;bottom:0;left:<?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH') + 6; ?>">
-						<table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%" background="<?php echo $this->out->filesPath('/images/flash_resizer/background.gif'); ?>">
-							<tr>
-								<td valign="top"><img src="<?php echo $this->out->filesPath('/images/flash_resizer/top.gif'); ?>" width="9" height="25" border="0" alt="" /></td>
-							</tr>
-							<tr height="100%">
-								<td valign="middle">
-									<!--a class="sq-backend-header-item" style="padding: 0px;" href="#" onClick="Javascript: toggleFrame()"-->
-										<img src="<?php echo $this->out->filesPath('/images/flash_resizer/bar.gif'); ?>" width="9" height="72" border="0" alt="<<" />
-									<!--/a-->
-								</td>
-							</tr>
-						</table>
-					</div>
-					<div id="my_space" style="position: absolute; top: 44px; left: 0px; visibility: hidden;">
-						<?php
-						$user = $GLOBALS['SQ_SYSTEM']->user;
-						$inbox_link = $GLOBALS['SQ_SYSTEM']->am->getLink($user->id, SQ_LINK_TYPE_2, 'inbox', TRUE, NULL, 'major', '1');
 
-						if (empty($inbox_link)) {
-							$inbox_url = '';
-						} else {
-							$inbox_asset = $GLOBALS['SQ_SYSTEM']->am->getAsset($inbox_link['minorid'], $inbox_link['minor_type_code']);
-							$inbox_url       = $inbox_asset->getBackendHref('details');
-							$new_message_url = $inbox_asset->getBackendHref('new_message');
-							$sent_url        = $inbox_asset->getBackendHref('sent');
-							$trash_url        = $inbox_asset->getBackendHref('trash');
-						}
+				<div id="asset_map" style="position: absolute; top: 47px; left: 6px; visibility: visible; border-top: 0px none; border-left: 0px none; width: <?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH'); ?>px">
+				</div>
 
-						$details_url = $user->getBackendHref('details');
+				<!-- resizer as a div to ease the use of jquery-ui resizable -->
+				<!-- see http://stackoverflow.com/questions/958419/custom-resizable-handles-in-jquery-ui as this is not a child of #asset_map -->
+				<div id="sq_resizer" class="ui-resizable-handle ui-resizable-e" style="border:0;height:100%;width:10px;position:absolute;top:0;bottom:0;left:<?php echo $GLOBALS['SQ_SYSTEM']->getUserPrefs('user', 'SQ_USER_ASSET_MAP_WIDTH') + 6; ?>">
+					<table border="0" cellspacing="0" cellpadding="0" width="100%" height="100%" background="<?php echo $this->out->filesPath('/images/flash_resizer/background.gif'); ?>">
+						<tr>
+							<td valign="top"><img src="<?php echo $this->out->filesPath('/images/flash_resizer/top.gif'); ?>" width="9" height="25" border="0" alt="" /></td>
+						</tr>
+						<tr height="100%">
+							<td valign="middle">
+								<!--a class="sq-backend-header-item" style="padding: 0px;" href="#" onClick="Javascript: toggleFrame()"-->
+									<img src="<?php echo $this->out->filesPath('/images/flash_resizer/bar.gif'); ?>" width="9" height="72" border="0" alt="<<" />
+								<!--/a-->
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div id="my_space" style="position: absolute; top: 44px; left: 0px; visibility: hidden;">
+					<?php
+					$user = $GLOBALS['SQ_SYSTEM']->user;
+					$inbox_link = $GLOBALS['SQ_SYSTEM']->am->getLink($user->id, SQ_LINK_TYPE_2, 'inbox', TRUE, NULL, 'major', '1');
 
-						// get all unread messages and read messages that are less than 8 hours old
-						if (!empty($inbox_url)) {
-							$ms = $GLOBALS['SQ_SYSTEM']->getMessagingService();
-							$from = time() - 28800; // 8 hours ago
-							$read_messages   = $ms->getMessages($GLOBALS['SQ_SYSTEM']->currentUserId(), NULL, Array(SQ_MSG_READ), Array(), $from, NULL, 'short_name', Array(), 0, TRUE);
-							$unread_messages = $ms->getMessages($GLOBALS['SQ_SYSTEM']->currentUserId(), NULL, Array(SQ_MSG_UNREAD), Array(), NULL, NULL, 'short_name', Array(), 0, TRUE);
+					if (empty($inbox_link)) {
+						$inbox_url = '';
+					} else {
+						$inbox_asset = $GLOBALS['SQ_SYSTEM']->am->getAsset($inbox_link['minorid'], $inbox_link['minor_type_code']);
+						$inbox_url       = $inbox_asset->getBackendHref('details');
+						$new_message_url = $inbox_asset->getBackendHref('new_message');
+						$sent_url        = $inbox_asset->getBackendHref('sent');
+						$trash_url        = $inbox_asset->getBackendHref('trash');
+					}
 
-							$messages = $read_messages + $unread_messages;
-							?>
-							<table class="myspace-section">
-								<tr>
-									<td valign="top"><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><img src="<?php echo sq_web_path('lib'); ?>/web/images/icons/asset_map/inbox_icon.png" align="left" border="0" /></a></td>
-									<td width="100%">
-										<p><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><span class="myspace-section-header"><?php echo translate('my_inbox'); ?></span><br /><span id="sq_messages_text"><?php echo translate('inbox_new_messages', $unread_messages, $messages); ?></span></a></p>
-										<p><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><span class="myspace-section-header"><?php echo translate('inbox_actions'); ?></span><br />
-										<a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main">+ <?php echo translate('inbox_view'); ?></a><br />
-										<a href="<?php echo $_SERVER['PHP_SELF'].$new_message_url; ?>" target="sq_main">+ <?php echo translate('inbox_send'); ?></a><br />
-										<a href="<?php echo $_SERVER['PHP_SELF'].$sent_url; ?>" target="sq_main">+ <?php echo translate('inbox_view_sent'); ?></a><br />
-										<a href="<?php echo $_SERVER['PHP_SELF'].$trash_url; ?>" target="sq_main">+ <?php echo translate('inbox_view_trash'); ?></a></p>
-									</td>
-								</tr>
-							</table>
-							<?php
-						}//end if user has an inbox
+					$details_url = $user->getBackendHref('details');
 
+					// get all unread messages and read messages that are less than 8 hours old
+					if (!empty($inbox_url)) {
+						$ms = $GLOBALS['SQ_SYSTEM']->getMessagingService();
+						$from = time() - 28800; // 8 hours ago
+						$read_messages   = $ms->getMessages($GLOBALS['SQ_SYSTEM']->currentUserId(), NULL, Array(SQ_MSG_READ), Array(), $from, NULL, 'short_name', Array(), 0, TRUE);
+						$unread_messages = $ms->getMessages($GLOBALS['SQ_SYSTEM']->currentUserId(), NULL, Array(SQ_MSG_UNREAD), Array(), NULL, NULL, 'short_name', Array(), 0, TRUE);
+
+						$messages = $read_messages + $unread_messages;
 						?>
 						<table class="myspace-section">
 							<tr>
-								<td valign="top"><a href="<?php echo $_SERVER['PHP_SELF'].$details_url; ?>" target="sq_main"><img src="<?php echo sq_web_path('lib'); ?>/web/images/icons/asset_map/mydetails_icon.png" align="left" border="0" /></a></td>
+								<td valign="top"><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><img src="<?php echo sq_web_path('lib'); ?>/web/images/icons/asset_map/inbox_icon.png" align="left" border="0" /></a></td>
 								<td width="100%">
-									<span class="myspace-section-header"><a href="<?php echo $_SERVER['PHP_SELF'].$details_url; ?>" target="sq_main"><?php echo translate('my_details'); ?></span><br /><?php echo translate('details_edit'); ?></a>
+									<p><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><span class="myspace-section-header"><?php echo translate('my_inbox'); ?></span><br /><span id="sq_messages_text"><?php echo translate('inbox_new_messages', $unread_messages, $messages); ?></span></a></p>
+									<p><a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main"><span class="myspace-section-header"><?php echo translate('inbox_actions'); ?></span><br />
+									<a href="<?php echo $_SERVER['PHP_SELF'].$inbox_url; ?>" target="sq_main">+ <?php echo translate('inbox_view'); ?></a><br />
+									<a href="<?php echo $_SERVER['PHP_SELF'].$new_message_url; ?>" target="sq_main">+ <?php echo translate('inbox_send'); ?></a><br />
+									<a href="<?php echo $_SERVER['PHP_SELF'].$sent_url; ?>" target="sq_main">+ <?php echo translate('inbox_view_sent'); ?></a><br />
+									<a href="<?php echo $_SERVER['PHP_SELF'].$trash_url; ?>" target="sq_main">+ <?php echo translate('inbox_view_trash'); ?></a></p>
 								</td>
 							</tr>
 						</table>
-					</div>
+						<?php
+					}//end if user has an inbox
 
-					<!-- TODO keeping this around until we clean up references to it -->
-					<iframe src="about:blank" name="sq_resizer" border="0" width="10" scrolling="no" marginwidth="0" marginheight="0" style="border:0;height:0;width:0"></iframe>
+					?>
+					<table class="myspace-section">
+						<tr>
+							<td valign="top"><a href="<?php echo $_SERVER['PHP_SELF'].$details_url; ?>" target="sq_main"><img src="<?php echo sq_web_path('lib'); ?>/web/images/icons/asset_map/mydetails_icon.png" align="left" border="0" /></a></td>
+							<td width="100%">
+								<span class="myspace-section-header"><a href="<?php echo $_SERVER['PHP_SELF'].$details_url; ?>" target="sq_main"><?php echo translate('my_details'); ?></span><br /><?php echo translate('details_edit'); ?></a>
+							</td>
+						</tr>
+					</table>
+				</div>
 
-					<!-- see http://stackoverflow.com/questions/3979000/iframe-and-conflicting-absolute-positions -->
-					<div id="container_main">
-						<!-- this frame refers to itself to set the asset finder, see core/lib/html_form/html_form.inc:829 -->
-						<iframe src="about:blank" name="sq_main" border="0" marginwidth="0" marginheight="0" scrolling="auto" style="border:0;height:100%;width:100%"></iframe>
-					</div>
+				<!-- TODO keeping this around until we clean up references to it -->
+				<iframe src="about:blank" name="sq_resizer" border="0" width="10" scrolling="no" marginwidth="0" marginheight="0" style="border:0;height:0;width:0"></iframe>
+
+				<!-- see http://stackoverflow.com/questions/3979000/iframe-and-conflicting-absolute-positions -->
+				<div id="container_main">
+					<!-- this frame refers to itself to set the asset finder, see core/lib/html_form/html_form.inc:829 -->
+					<iframe src="about:blank" name="sq_main" border="0" marginwidth="0" marginheight="0" scrolling="auto" style="border:0;height:100%;width:100%"></iframe>
 				</div>
 
 				<script type="text/javascript">

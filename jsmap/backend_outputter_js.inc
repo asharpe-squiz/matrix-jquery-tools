@@ -74,6 +74,12 @@ class Backend_OutputterJS extends Backend_Outputter {
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
 		$this->addOnLoad('routerLoaded("sq_override");');
 
+		// see http://stackoverflow.com/questions/10091914/jstree-display-flaw-in-ie8
+		// for the doctype
+		?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<?php
+
 		$returnValue = parent::_paintHeader();
 
 		?>

@@ -31,3 +31,10 @@ img.loading {
 	margin-left: 3px;
 	margin-bottom: -3px;
 }
+
+
+/* fix heights modified by ui-resizable */
+html, body, #sq-content {
+	height: 100% !important;
+}
+
