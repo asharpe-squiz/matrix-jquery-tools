@@ -1,0 +1,33 @@
+/* see http://stackoverflow.com/questions/3979000/iframe-and-conflicting-absolute-positions */
+#container_resizer {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0; /* this needs to be adjusted depending on the map width */
+	width: 10px;
+}
+
+#container_main {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0; /* this needs to be adjusted depending on the map width */
+	right: 0;
+}
+
+/* background colours for the tree, default and in useme mode */
+.jstree.jstree-default.jstree-focused { background-color: white; }
+.jstree.jstree-default.useme { background-color: #E9D4F4; }
+
+
+/* make the menu smaller so we can see it on one screen */
+/* TODO fix scrollbars for this */
+li.context-menu-item.icon {
+	min-height: 10px;
+}
+
+/* pure cosmetics for the loading spinner */
+img.loading {
+	margin-left: 3px;
+	margin-bottom: -3px;
+}

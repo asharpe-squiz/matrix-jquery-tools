@@ -50,21 +50,29 @@ class Backend_OutputterJS extends Backend_Outputter {
 	 */
 	function _paintHeader() {
 		// add the requisite JS
+
+		// TODO get this from somewhere else
 		$this->addJSInclude('https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');
+
+		// TODO package these or get them from somewhere else
+		$this->addJSInclude('/dev/jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.js');
+		$this->addCssInclude('/dev/jquery-ui-1.9.1.custom/css/ui-lightness/jquery-ui-1.9.1.custom.css');
+
+		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery-ui-1.9.1-resizable-sq.js');
+
 		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.js');
 		$this->addJSInclude(sq_web_path('lib') . '/jsmap/jquery.matrixTree.js');
 		$this->addJSInclude(sq_web_path('lib') . '/jsmap/framesetup.js');
 		$this->addJSInclude(sq_web_path('lib') . '/asset_map/asset_map.js');
 
 		$this->addCssInclude(sq_web_path('lib') . '/jsmap/jquery.contextMenu.css');
+		$this->addCssInclude(sq_web_path('lib') . '/jsmap/matrixTree.css');
 
 		$this->addJSInclude(sq_web_path('root_url') . '/dev/jstree/jquery.jstree.js');
 
 		// we're appending the name so it's easier to find out what frame is requesting the router
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
 		$this->addOnLoad('routerLoaded("sq_override");');
-//		$this->addOnLoad('top.frames["sq_resizer"].location.href = jsRouterPath + "sq_resizer&src=backend_outputter_js";');
-//		$this->addOnLoad('top.frames["sq_main"].location.href = jsRouterPath + "sq_main&src=backend_outputter_js";');
 
 		$returnValue = parent::_paintHeader();
 

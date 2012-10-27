@@ -696,11 +696,62 @@ init = $(xml);
 
 					initialiseAssetTypes($(xml).find('asset_types'));
 
-					$($map.selector)
+					// references to other containers for resizing
+					var $cResizer = $('#sq_resizer');
+					var $cMain = $('#container_main');
+					var $assetMap = $($map.selector);
+
+					$assetMap
 						.bind("loaded.jstree", function (event, data) {
 							buildContextMenus();
 							buildBranch($($map.selector + ' [assetid=1]'), $(xml).find('assets'));
 //							$map.checkRefresh();
+
+							// hook up resizing
+							// see http://bugs.jqueryui.com/ticket/4310
+							$(this).resizable({
+								handles: {
+									e: $cResizer
+								},
+								// see http://bugs.jqueryui.com/ticket/3176
+								// and http://bugs.jqueryui.com/ticket/6004
+								start: function (event, ui) {
+									ifr = $('#container_main iframe');
+									var d = $('<div></div>');
+
+									$cMain.append(d[0]);
+									d[0].id = 'resize_iframe_cover';
+									d.css({
+										position:'absolute',
+										top: ifr.position().top,
+										left: 0,
+										height: ifr.height(),
+										width: '100%'
+									});
+								},
+
+								stop: function (event, ui) {
+//console.log('stop', arguments);
+									// see http://bugs.jqueryui.com/ticket/3176
+									$('#resize_iframe_cover').remove();
+
+									// see http://forum.jquery.com/topic/resizable-ignore-height-change-on-horizontal-resize
+									ui.element.css({ height: null });
+
+									// make sure we finish up with reasonable defaults
+									var offset = $cResizer.get(0).offsetLeft;
+
+									$assetMap.css('width', offset - $assetMap.get(0).offsetLeft);
+									$cMain.css('left', offset + 10);
+								},
+								// move the resizer and resize the main frame
+								resize: function(event, ui) {
+									var pad = 0;
+									var offset = ui.position.left + ui.size.width + pad;
+									$cResizer.css('left', offset);
+									$cMain.css('left', offset + 10);
+								}
+							});
 						})
 						.jstree({
 							plugins:[
@@ -736,7 +787,6 @@ init = $(xml);
 							},
 							// see http://stackoverflow.com/questions/11000095/dnd-how-to-restrict-dropping-to-certain-node-types
 							crrm: {
-								input_width_limit: 200,
 								move: {
 									always_copy: "multitree", // false, true or "multitree"
 									open_onmove: false,
@@ -868,8 +918,9 @@ console.log('drag_start', arguments);
 							// make the marker line full width
 							// see jstree:2583
 							// see jstree:2408
-							t.dnd_expose().ml.css('width', $($map.selector).width() - $(data.event.target).offset().left);
+							t.dnd_expose().ml.css('width', $assetMap.width() - $(data.event.target).offset().left);
 						})
+						// see jstree.js:2438
 						.unbind('drag_stop.vakata')
 						.bind("drag_stop.vakata", $.proxy(function () {
 								if(this.data.dnd.to1) { clearTimeout(this.data.dnd.to1); }
@@ -1542,6 +1593,8 @@ console.log('nothing selected', $map.selected);
 		}
 	});//end keyup
 
+	// jquery plugin pattern
+	return this;
 };// End matrixMap
 
 

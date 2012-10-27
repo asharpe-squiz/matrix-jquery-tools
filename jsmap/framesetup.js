@@ -30,15 +30,23 @@ console.trace();
 		loadFrames();
 
 		// start the asset map
-		$('#asset_map')
+		var $assetMap = $('#asset_map')
 			.css({
 				bottom: '20px',
 				overflow: 'auto'
 			})
 			.matrixTree();
-//			.matrixMap();
+
+		var offsetLeft = $assetMap.get(0).offsetLeft + $assetMap.get(0).offsetWidth;
+		var cResizer = $('#sq_resizer')
+			.css({
+				left: offsetLeft
+			});
+		var cMain = $('#container_main')
+			.css({
+				left: offsetLeft + 10
+			});
 return;
-		randomFixing();
 
 		// start the jstree
 		// this is from git
@@ -110,18 +118,10 @@ function routersLoaded() {
 // load the actual contents
 function loadFrames() {
 	var frameInfo = top.frameUrls;
-//console.log(frameInfo);
-//	parent.frames['sq_header'].location.replace = frameInfo['sq_header'];
-//	frames['sq_resizer'].location.replace = frameInfo['sq_resizer'];
-//	frames['sq_main'].location.replace = frameInfo['sq_main'];
 
 	// showing main before the header so it can access the sq-search-wait-popup
 	// TODO there's still a race condition here
 	// we could poll for the sq-search-wait-popup, then load the header...
-//	frames['sq_main'].location.href = frameInfo['sq_main'];
-//	frames['sq_resizer'].location.href = frameInfo['sq_resizer'];
-//	parent.frames['sq_header'].location.href = frameInfo['sq_header'];
-
 	top.getFrame('sq_main').location.href = frameInfo['sq_main'];
 	top.getFrame('sq_resizer').location.href = frameInfo['sq_resizer'];
 	top.getFrame('sq_header').location.href = frameInfo['sq_header'];
