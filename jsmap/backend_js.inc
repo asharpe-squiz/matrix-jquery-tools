@@ -100,11 +100,8 @@ class BackendJS extends Backend {
 			$page_title = translate('page_title_admin_interface', SQ_SYSTEM_LONG_NAME);
 		}
 
-		// see http://stackoverflow.com/questions/10091914/jstree-display-flaw-in-ie8
-		// for the doctype
 		?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
+		<html>
 			<head>
 				<title><?php echo $page_title; ?></title>
 				<meta http-equiv="Content-Type" content="text/html; charset=<?php echo SQ_CONF_DEFAULT_CHARACTER_SET; ?>">
@@ -546,7 +543,7 @@ class BackendJS extends Backend {
 				// this is important because it tells the asset map what the available
 				// paramters are so that it can load them without explicitly knowing the names
 				$params = implode(',', array_keys($parameters));
-				?>$.extend($.fn.matrix.map.params, <?php echo json_encode($parameters);	?>);
+				?>$.extend($.squiz.matrix.assetMap.params, <?php echo json_encode($parameters);	?>);
 	<?php
 			} //end if
 			echo '</script>';

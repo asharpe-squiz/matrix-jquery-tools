@@ -1,3 +1,30 @@
+
+
+function getItOn() {
+	// load the real contents
+	loadFrames();
+
+	// start the asset map
+	var $assetMap = $('#asset_map')
+		.css({
+			bottom: '20px',
+			overflow: 'auto'
+		})
+		.matrixTree();
+
+	var offsetLeft = $assetMap.get(0).offsetLeft + $assetMap.get(0).offsetWidth;
+	var cResizer = $('#sq_resizer')
+		.css({
+			left: offsetLeft
+		});
+	var cMain = $('#container_main')
+		.css({
+			left: offsetLeft + 10
+		});
+}
+
+
+
 // keep track of which routers are loaded
 var loadedRouters = {
 //	sq_header: false,
@@ -114,6 +141,7 @@ function routersLoaded() {
 
 	return loaded;
 }
+
 
 // load the actual contents
 function loadFrames() {

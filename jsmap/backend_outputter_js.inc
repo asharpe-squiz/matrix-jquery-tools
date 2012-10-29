@@ -72,7 +72,8 @@ class Backend_OutputterJS extends Backend_Outputter {
 
 		// we're appending the name so it's easier to find out what frame is requesting the router
 		$this->addOnLoad('jsRouterPath = "' . sq_web_path('lib') . '/jsmap/jsRouter.html?name=";');
-		$this->addOnLoad('routerLoaded("sq_override");');
+//		$this->addOnLoad('routerLoaded("sq_override");');
+		$this->addOnLoad('getItOn();');
 
 		// see http://stackoverflow.com/questions/10091914/jstree-display-flaw-in-ie8
 		// for the doctype
