@@ -4,23 +4,120 @@ function getItOn() {
 	// load the real contents
 	loadFrames();
 
+
+	var $cResizer = $('#sq_resizer');
+	var $cMain = $('#container_main');
+
+
 	// start the asset map
 	var $assetMap = $('#asset_map')
 		.css({
 			bottom: '20px',
 			overflow: 'auto'
 		})
+		// hook up resizing
+		// see http://bugs.jqueryui.com/ticket/4310
+		.resizable({
+			handles: {
+				e: $cResizer
+			},
+			// see http://bugs.jqueryui.com/ticket/3176
+			// and http://bugs.jqueryui.com/ticket/6004
+			start: function (event, ui) {
+				var ifr = $('#container_main iframe');
+				var d = $('<div></div>');
+
+				$cMain.append(d[0]);
+				d[0].id = 'resize_iframe_cover';
+				d.css({
+					position:'absolute',
+					top: ifr.position().top,
+					left: 0,
+					height: ifr.height(),
+					width: '100%'
+				});
+			},
+
+			stop: function (event, ui) {
+				// see http://bugs.jqueryui.com/ticket/3176
+				$('#resize_iframe_cover').remove();
+
+				// see http://forum.jquery.com/topic/resizable-ignore-height-change-on-horizontal-resize
+				ui.element.css({ height: null });
+				$assetMap.css({ height: 'auto' });
+
+				// make sure we finish up with reasonable defaults
+				var offset = $cResizer.get(0).offsetLeft;
+
+				$assetMap.css('width', offset - $assetMap.get(0).offsetLeft);
+				$cMain.css('left', offset + 10);
+			},
+			// move the resizer and resize the main frame
+			resize: function(event, ui) {
+				var pad = 0;
+				var offset = ui.position.left + ui.size.width + pad;
+				$cResizer.css('left', offset);
+				$cMain.css('left', offset + 10);
+			}
+		})
 		.matrixTree();
 
+
+		// this is effectively a jstree plugin
+		// custom dnd_finish to handle opening the context menu
+		var dnd_finish = function(e) {
+console.log('dnd_finish', arguments);
+//console.log('selected', t.data.ui.selected);
+//console.log('target', $(e.target).closest('li'));
+
+			var foundSelf = false;
+			var t = $.jstree._reference(e.target);
+			t.data.ui.selected.each(function() {
+				if (this === $(e.target).closest('li').get(0)) {
+					foundSelf = true;
+					return false;
+				}
+			});
+
+			if (foundSelf) {
+console.log('self drop!');
+				// let the original method clean up
+//							return this.dnd_finish.old.apply(this, arguments);
+				return;
+			}
+
+			this.dnd_prepare();
+
+			// grab the info we need now because it's going away real shortly
+			sq_assetMap.dnd_info = {
+				// TODO check if prepared_move from jstree:105 might be better in dnd_expose
+				hidden: this.dnd_expose(),
+				data: $.extend({}, this.data.dnd)
+			};
+
+			// a chance at making a difference
+			$(sq_assetMap.menuSelectors['select']).contextMenu(e);
+		};
+		// TODO should probably use the prototype instead, and do
+		// this before any trees are created
+		dnd_finish.old = $.jstree._fn.dnd_finish;
+		$.jstree._fn.dnd_finish = dnd_finish;
+//								dnd_finish.old = t.dnd_finish;
+//								t.dnd_finish = dnd_finish;
+//								dnd_finish.old = $.jstree._fn.dnd_finish;
+//								$.jstree._fn.dnd_finish = dnd_finish;
+
+
+
 	var offsetLeft = $assetMap.get(0).offsetLeft + $assetMap.get(0).offsetWidth;
-	var cResizer = $('#sq_resizer')
-		.css({
-			left: offsetLeft
-		});
-	var cMain = $('#container_main')
-		.css({
-			left: offsetLeft + 10
-		});
+	$cResizer.css({
+		left: offsetLeft
+	});
+	$cMain.css({
+		left: offsetLeft + 10
+	});
+
+
 }
 
 
