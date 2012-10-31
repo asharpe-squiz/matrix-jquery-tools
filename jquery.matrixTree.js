@@ -4,7 +4,7 @@ Design
 There will be a single $.squiz.matrix object in the namespace and it contains
 
 	asset - information about assets, ie. status
-	assetMap - the implementation of the assetMap
+	assetMap - the implementation of the assetMap (singleton)
 
 One can create multiple visual representations of the assetMap via
 
@@ -18,7 +18,9 @@ Each instance of the tree is a jstree and operations on that tree will be
 handled by the core assetMap and propagated to the other trees as necessary (eg.
 expansion of the tree) via events
 
-When the first tree is created,
+When the first tree is created, initialisation is begin and upon completion of
+the initialisation the init.assetMap event is fired (and can be listened to on the
+assetMap)
 
 
 
@@ -38,6 +40,8 @@ TODO
 	consistency
 		sometimes we're passing around raw DOM, other times jQuery object
 		sometimes we're passing around a.asset_name other times an li
+
+	teleport
 
 */
 
@@ -925,6 +929,10 @@ console.log('This needs to be populated with the entry from the most recently cr
 					$.extend(v, typeCommon);
 				});
 
+				sq_assetMap.triggerHandler('typesLoaded.assetMap', {
+					types: sq_assetMap.assetTypes
+				});
+
 /*
 				// TODO this belongs in each tree
 				sq_assetMap.menuSelectors['asset'] = sq_assetMap.selector + ' li[assetid] a';
@@ -1004,49 +1012,6 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 //console.log('success', arguments);
 
 
-								// this is effectively a jstree plugin
-								// custom dnd_finish to handle opening the context menu
-								var dnd_finish = function(e) {
-console.log('dnd_finish', arguments);
-//console.log('selected', t.data.ui.selected);
-//console.log('target', $(e.target).closest('li'));
-
-									var foundSelf = false;
-									var t = $.jstree._reference(e.target);
-									t.data.ui.selected.each(function() {
-										if (this === $(e.target).closest('li').get(0)) {
-											foundSelf = true;
-											return false;
-										}
-									});
-
-									if (foundSelf) {
-console.log('self drop!');
-										// let the original method clean up
-			//							return this.dnd_finish.old.apply(this, arguments);
-										return;
-									}
-
-									this.dnd_prepare();
-
-									// grab the info we need now because it's going away real shortly
-									sq_assetMap.dnd_info = {
-										// TODO check if prepared_move from jstree:105 might be better in dnd_expose
-										hidden: this.dnd_expose(),
-										data: $.extend({}, this.data.dnd)
-									};
-
-									// a chance at making a difference
-									$(sq_assetMap.menuSelectors['select']).contextMenu(e);
-								};
-								// TODO should probably use the prototype instead, and do
-								// this before any trees are created
-								dnd_finish.old = $.jstree._fn.dnd_finish;
-								$.jstree._fn.dnd_finish = dnd_finish;
-//								dnd_finish.old = t.dnd_finish;
-//								t.dnd_finish = dnd_finish;
-//								dnd_finish.old = $.jstree._fn.dnd_finish;
-//								$.jstree._fn.dnd_finish = dnd_finish;
 
 
 								sq_assetMap.initialiseAssetTypes($(xml).find('asset_types'));
@@ -1055,12 +1020,19 @@ console.log('self drop!');
 								var $cResizer = $('#sq_resizer');
 								var $cMain = $('#container_main');
 								var $assetMap = $(sq_assetMap.selector);
+
+//								sq_assetMap.bind('init.assetMap')
+console.log('about to load the assetMap');
+sq_assetMap._tree.buildBranch(undefined, $(xml).find('assets'));
 sq_assetMap.triggerHandler('init.assetMap', {$xml: $(xml).find('assets')});
+return;
 
 								$assetMap
 									.bind("loaded.jstree", function (event, data) {
-										buildContextMenus();
-										buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
+										// TODO reinstate this
+//										buildContextMenus();
+//										sq_assetMap._tree.buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
+//										buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
 //										$map.checkRefresh();
 
 										// hook up resizing
@@ -1132,6 +1104,8 @@ sq_assetMap.triggerHandler('init.assetMap', {$xml: $(xml).find('assets')});
 										},
 										json_data: {
 											data: [
+												// TODO this needs to come from somewhere else for
+												// the per-root-node preference
 												{
 													data: 'root',
 													state: 'closed',
@@ -1315,11 +1289,12 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 							$target = $current_asset;
 						}
 
-						$.each(sq_assetMap.trees, function(tree) {
-							// TODO the parsing of the XML should be here, not in each tree
-							tree.buildBranch.apply(tree, [$target, $(xml)]);
-//							this.triggerHandler('nodeLoaded.assetMap', {$xml: $(xml)});
-						})
+						sq_assetMap._tree.buildBranch($target, $(xml));
+//						$.each(sq_assetMap.trees, function(tree) {
+//							// TODO the parsing of the XML should be here, not in each tree
+//							tree.buildBranch.apply(tree, [$target, $(xml)]);
+////							this.triggerHandler('nodeLoaded.assetMap', {$xml: $(xml)});
+//						})
 					},
 					complete: function() {
 						// Remove loading indicator
@@ -1327,6 +1302,107 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 					}
 				});
 
+			},
+
+			// this is a structure that we'll use to store our representation
+			// of the tree, each expansion operation should build to this tree
+			// and appropriate events should propagate
+			_tree: {
+				model: {
+					// root of the tree
+					assetid: 1,
+					parent: undefined,
+
+					// this is the only "artificial" property (for now)
+					_children: [],
+					uniqueId: String(Math.random()).replace(/^0\./, '')
+				},
+				buildBranch: function(root, $xml) {
+					// default to the base
+					root = root || sq_assetMap._tree.model;
+
+					// this is to control how we deal with the different values when we attach them to the dom
+					var handlers = {
+						integer: function(input) { return parseInt(input, 10); },
+						string: function(input) { return unescape(input.replace(/\+/g, ' ')); },
+						'default': function(input) { return input; }
+					};
+
+					// these are the fields we know about
+					var fields = {
+						assetid: handlers.string,
+						link_type: handlers.integer,
+						name: handlers.string,
+						num_kids: handlers.integer,
+						sort_order: handlers.integer,
+						type_code: handlers.string,
+						url: handlers.string
+					};
+
+					// Normalise a field value
+					var getField = function(asset, fieldName) {
+						return fields[fieldName] ? fields[fieldName](asset.attr(fieldName)) : asset.attr(fieldName);
+					}
+
+					// Check each asset that we find
+					$xml.find('asset').each(function() {
+						var $asset = $(this);
+
+						// don't add ourself as a child of ourself (seen it happen in the case of the trash)
+						if (root.assetid == $(this).attr('assetid')) return;
+
+						if (this.attributes.length) {
+							// record our parent
+							// TODO why are we using our parents parent?
+							$asset.attr('parentid', root.assetid || root.parent);
+
+							// these is used in jstree
+							var info = {
+								data: getField($asset, 'name'),
+								attr: {
+									// see http://stackoverflow.com/questions/6105905/drag-and-drop-events-in-dnd-plugin-in-jstree-are-not-getting-called
+									'class': 'jstree-drop'
+								},
+								state: getField($asset, 'num_kids') > 0 ? 'closed' : undefined
+							};
+
+							// these are used to manage the model of the tree
+							// TODO this is bad, should consider using prop or data instead to store the values
+							// see http://api.jquery.com/prop/
+							$.each(this.attributes, function(i, attr) {
+								info.attr[attr.name] = getField($asset, attr.name);
+							});
+							// allow some children
+							info._children = [];
+							info.uniqueId = info.attr.uniqueId = String(Math.random()).replace(/^0\./, '');
+
+							// add it to the tree
+							// TODO fire an event
+							// be able to detect when this happened via a refresh
+							// or an open event (given the granularity of the event)
+							root._children.push(info);
+
+							// TODO do we need to make this asynchronous (or should it be synchronous)
+							setTimeout(function() {
+								sq_assetMap.triggerHandler('nodeLoaded.assetMap', {
+									root: root,
+									node: info
+								});
+//								sq_assetMap.triggerHandler('init.assetMap');
+							}, 0);
+//							sq_assetMap.triggerHandler('nodeloaded.assetMap');
+//							sq_assetMap.triggerHandler('nodeloaded.assetMap', {
+//								root: root,
+//								node: info
+//							});
+
+							// TODO how about the position in the parent?
+//							$(this.selector).jstree('create', $root, info.attr['sort_order'] || 'inside', info, false, true);
+
+						}
+					});
+
+				}
 			}
 
 		});
@@ -1343,6 +1419,15 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 
 	var sq_assetMap = $.squiz.matrix.assetMap;
 
+	// some global bindings/option setting
+	sq_assetMap
+		.bind('typesLoaded.assetMap', function(event, data) {
+			// Setup types for all maps
+			$.extend(true, $.jstree.defaults, {
+				types: data
+			});
+		});
+
 
 	var tree = {
 		// TODO modes belong here
@@ -1358,13 +1443,154 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 
 			that.options = $.extend(defaults, options);
 
+
+			sq_assetMap
+				.bind('typesLoaded.assetMap', function(event, data) {
+
+
+// initialise the tree UI before receiving any events for it (ie, nodeLoaded.assetMap)
+					that
+						.bind("loaded.jstree", function (event, data) {
+							// TODO reinstate this
+		//					buildContextMenus();
+		//					sq_assetMap._tree.buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
+		//					buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
+		//										$map.checkRefresh();
+
+						})
+						.jstree({
+							plugins:[
+								'json_data',
+								'crrm',
+								'ui',
+								'themes',
+								'dnd',
+								'types'
+							],
+							core: {
+								animation: 0
+							},
+							types: {
+		//						types: sq_assetMap.assetTypes,
+								type_attr: 'type_code'
+							},
+							themes: {
+								theme: "classic",
+								dots: false,
+								icons: true
+							},
+							json_data: {
+								data: [
+									{
+										data: 'root',
+										state: 'closed',
+										attr: {
+											// TODO these may be different according to prefs/teleport
+											assetid: 1,
+											uniqueId: sq_assetMap._tree.model.uniqueId
+										}
+									}
+								]
+							},
+							// see http://stackoverflow.com/questions/11000095/dnd-how-to-restrict-dropping-to-certain-node-types
+							crrm: {
+								move: {
+									always_copy: "multitree", // false, true or "multitree"
+									open_onmove: false,
+									default_position: "last",
+									check_move: function (m) {
+
+										// we can check for valid parents here
+										// potentially circumventing the "going to fail" hipo
+		//								if(!m.np.hasClass("someClassInTarget")) return false;
+		//								if(!m.o.hasClass("someClassInSource")) return false;
+										return true;
+									}
+								}
+							},
+							dnd: {
+								drag_finish: function(data) {
+		console.log('drag_finish', arguments);
+								},
+								drop_finish: function(data) {
+		console.log('drop_finish', arguments);
+								}
+							}
+						})
+						.bind("move_node.jstree", function(evt, data) {
+		console.log('move_node event', arguments);
+							var t = $.jstree._reference(this);
+							// we'll handle opening ourselves so we can control
+							// the refresh better
+							data.rslt.np.parentsUntil(".jstree").andSelf().filter(".jstree-closed").each(function () {
+								t.open_node(this, false, true);
+							});
+						})
+						// this is in the context of the tree
+						.bind('open_node.jstree', function(evt, data) {
+							if (sq_assetMap.debug) console.log('open_node', arguments);
+
+							// this is a lame way to get to the element
+							// data.args[0] needs wrapping due to opening via dnd
+							var $node = $(data.args[0]);
+
+							if ($node.attr('assetid') === '1') return;
+		console.log('checking for open');
+							// check to see if we've already got our children
+							// this is broken when we're asked to open via dnd
+		//					if ($node.find('ul').length) return;
+
+							$node.attr('hasOpened', true);
+
+							// expand this branch
+							get_children(null, false, data.args[0]);
+						})
+						// this is to detect when we've programmatically started
+						// dnd, and we want to finish
+						// see jstree:2434
+						.bind('mousedown.sqtree', function(evt) {
+							// this is too blunt - want to close branches while in dnd
+							if($.vakata.dnd.is_drag && $.vakata.dnd.user_data.jstree) {
+								$.vakata.dnd.drag_stop({});
+								t.dnd_finish(evt);
+							}
+						});
+
+
+
+
+
+
+				})
+				.bind('init.assetMap', function(event, data) {
+console.log('tree:init.assetMap', arguments);
+					tree._init.call(that, data.$xml);
+				})
+//				.bind('nodeLoaded.assetMap', $.proxy(function(event, data) {
+//console.log('tree:nodeloaded.assetMap', arguments);
+////					$(this.selector).jstree('create', $root, data.info.attr['sort_order'] || 'inside', data.info, false, true);
+//				}), this);
+				.bind('nodeLoaded.assetMap', function(event, data) {
+//console.log('tree:nodeloaded.assetMap', arguments);
+//					$(this.selector).jstree('create', $root, data.info.attr['sort_order'] || 'inside', data.info, false, true);
+//					$(that.selector).jstree('create', data.root, data.node.attr['sort_order'] || 'inside', data.node, false, true);
+//console.log('adding node to ', that.selector);
+//console.log('adding node to ', data.root.uniqueId);
+//console.log('adding node to ', $('[uniqueId=' + data.root.uniqueId + ']', that.selector));
+console.log('adding node', data.node);
+					$(that.selector).jstree(
+						'create',
+						$('[uniqueId=' + data.root.uniqueId + ']', that.selector),
+						data.node.attr['sort_order'] || 'inside',
+						data.node,
+						false,
+						true
+					);
+				});
+
 			// first tree?
 			if (!sq_assetMap.trees.length) {
 				sq_assetMap.initialise();
-				sq_assetMap.bind('init.assetMap', function(event, data) {
-console.log('arguments', arguments);
-					tree._init.call(that, data.$xml);
-				})
 			}
 			else {
 				// TODO
@@ -1483,153 +1709,6 @@ console.log('nothing selected', that.selected);
 
 
 
-			this
-				.bind("loaded.jstree", function (event, data) {
-					buildContextMenus();
-					buildBranch($(sq_assetMap.selector + ' [assetid=1]'), $(xml).find('assets'));
-//										$map.checkRefresh();
-
-					// hook up resizing
-					// see http://bugs.jqueryui.com/ticket/4310
-//					$(this).resizable({
-//						handles: {
-//							e: $cResizer
-//						},
-//						// see http://bugs.jqueryui.com/ticket/3176
-//						// and http://bugs.jqueryui.com/ticket/6004
-//						start: function (event, ui) {
-//							var ifr = $('#container_main iframe');
-//							var d = $('<div></div>');
-//
-//							$cMain.append(d[0]);
-//							d[0].id = 'resize_iframe_cover';
-//							d.css({
-//								position:'absolute',
-//								top: ifr.position().top,
-//								left: 0,
-//								height: ifr.height(),
-//								width: '100%'
-//							});
-//						},
-//
-//						stop: function (event, ui) {
-//							// see http://bugs.jqueryui.com/ticket/3176
-//							$('#resize_iframe_cover').remove();
-//
-//							// see http://forum.jquery.com/topic/resizable-ignore-height-change-on-horizontal-resize
-//							ui.element.css({ height: null });
-//							$assetMap.css({ height: 'auto' });
-//
-//							// make sure we finish up with reasonable defaults
-//							var offset = $cResizer.get(0).offsetLeft;
-//
-//							$assetMap.css('width', offset - $assetMap.get(0).offsetLeft);
-//							$cMain.css('left', offset + 10);
-//						},
-//						// move the resizer and resize the main frame
-//						resize: function(event, ui) {
-//							var pad = 0;
-//							var offset = ui.position.left + ui.size.width + pad;
-//							$cResizer.css('left', offset);
-//							$cMain.css('left', offset + 10);
-//						}
-//					});
-				})
-				.jstree({
-					plugins:[
-						'json_data',
-						'crrm',
-						'ui',
-						'themes',
-						'dnd',
-						'types'
-					],
-					core: {
-						animation: 0
-					},
-					types: {
-						types: sq_assetMap.assetTypes,
-						type_attr: 'type_code'
-					},
-					themes: {
-						theme: "classic",
-						dots: true,
-						icons: true
-					},
-					json_data: {
-						data: [
-							{
-								data: 'root',
-								state: 'closed',
-								attr: {
-									assetid: 1
-								}
-							}
-						]
-					},
-					// see http://stackoverflow.com/questions/11000095/dnd-how-to-restrict-dropping-to-certain-node-types
-					crrm: {
-						move: {
-							always_copy: "multitree", // false, true or "multitree"
-							open_onmove: false,
-							default_position: "last",
-							check_move: function (m) {
-
-								// we can check for valid parents here
-								// potentially circumventing the "going to fail" hipo
-								if(!m.np.hasClass("someClassInTarget")) return false;
-								if(!m.o.hasClass("someClassInSource")) return false;
-								return true;
-							}
-						}
-					},
-					dnd: {
-						drag_finish: function(data) {
-console.log('drag_finish', arguments);
-						},
-						drop_finish: function(data) {
-console.log('drop_finish', arguments);
-						}
-					}
-				})
-				.bind("move_node.jstree", function(evt, data) {
-console.log('move_node event', arguments);
-					var t = $.jstree._reference(this);
-					// we'll handle opening ourselves so we can control
-					// the refresh better
-					data.rslt.np.parentsUntil(".jstree").andSelf().filter(".jstree-closed").each(function () {
-						t.open_node(this, false, true);
-					});
-				})
-				// this is in the context of the tree
-				.bind('open_node.jstree', function(evt, data) {
-					if (sq_assetMap.debug) console.log('open_node', arguments);
-
-					// this is a lame way to get to the element
-					// data.args[0] needs wrapping due to opening via dnd
-					var $node = $(data.args[0]);
-
-					if ($node.attr('assetid') === '1') return;
-console.log('checking for open');
-					// check to see if we've already got our children
-					// this is broken when we're asked to open via dnd
-					if ($node.find('ul').length) return;
-
-					$node.attr('hasOpened', true);
-
-					// expand this branch
-					get_children(null, false, data.args[0]);
-				})
-				// this is to detect when we've programmatically started
-				// dnd, and we want to finish
-				// see jstree:2434
-				.bind('mousedown.sqtree', function(evt) {
-					// this is too blunt - want to close branches while in dnd
-					if($.vakata.dnd.is_drag && $.vakata.dnd.user_data.jstree) {
-						$.vakata.dnd.drag_stop({});
-						t.dnd_finish(evt);
-					}
-				});
 
 
 
