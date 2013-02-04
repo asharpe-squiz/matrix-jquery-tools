@@ -52,7 +52,9 @@ class Backend_OutputterJS extends Backend_Outputter {
 		// add the requisite JS
 
 		// TODO get this from somewhere else
-		$this->addJSInclude('https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');
+		$this->addJSInclude('/dev/misc/jquery.min.js');
+//		$this->addJSInclude('https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js');
+//		$this->addJSInclude('https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.js');
 
 		// TODO package these or get them from somewhere else
 		$this->addJSInclude('/dev/jquery-ui-1.9.1.custom/js/jquery-ui-1.9.1.custom.js');

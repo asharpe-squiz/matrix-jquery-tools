@@ -66,7 +66,7 @@ function getItOn() {
 		// this is effectively a jstree plugin
 		// custom dnd_finish to handle opening the context menu
 		var dnd_finish = function(e) {
-console.log('dnd_finish', arguments);
+console.log('dnd_finish', arguments, this);
 //console.log('selected', t.data.ui.selected);
 //console.log('target', $(e.target).closest('li'));
 
@@ -86,17 +86,21 @@ console.log('self drop!');
 				return;
 			}
 
+			// this refers to the a $.jstree._instance
 			this.dnd_prepare();
 
+			// our version ui
+			var ui = $.squiz.matrix.ui._reference(this);
+
 			// grab the info we need now because it's going away real shortly
-			sq_assetMap.dnd_info = {
+			ui.dnd_info = {
 				// TODO check if prepared_move from jstree:105 might be better in dnd_expose
 				hidden: this.dnd_expose(),
 				data: $.extend({}, this.data.dnd)
 			};
 
 			// a chance at making a difference
-			$(sq_assetMap.menuSelectors['select']).contextMenu(e);
+//			$(ui.menuSelectors['select']().selector).contextMenu(e);
 		};
 		// TODO should probably use the prototype instead, and do
 		// this before any trees are created

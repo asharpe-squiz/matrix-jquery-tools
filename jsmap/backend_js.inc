@@ -523,7 +523,7 @@ class BackendJS extends Backend {
 
 				$parameters = Array(
 								'parameter.backendsuffix'			=> SQ_CONF_BACKEND_SUFFIX,
-//									'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'] . '&XDEBUG_SESSION_START=netbeans-xdebug',
+//								'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'] . '&XDEBUG_SESSION_START=netbeans-xdebug',
 								'parameter.sessionid'				=> $_COOKIE['SQ_SYSTEM_SESSION'],
 								'parameter.sessionkey'				=> $GLOBALS['SQ_SYSTEM']->getUniqueSessionKey(),
 								'parameter.url.iconurl'				=> '__lib/web/images/icons',
