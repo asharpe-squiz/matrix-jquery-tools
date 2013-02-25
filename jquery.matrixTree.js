@@ -94,9 +94,12 @@ TODO
 
 	fire some events so we can start things sanely, like the polling
 
-	figure out where not_accessible.png is used asset_map.inc:470 (permissions)
-		'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
-		'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
+	figure out where not_accessible.png is used
+		see asset_map.inc:470 (permissions)
+			'parameter.url.notaccessibleicon'	=> 'asset_map/not_accessible.png',
+			'parameter.url.type2icon'			=> 'asset_map/not_visible.png',
+		see MatrixTreeCellRenderer.java:83
+		see Asset.java:442
 
 	consistency
 		sometimes we're passing around raw DOM, other times jQuery object
@@ -241,14 +244,58 @@ TODO
 	}
 
 
-	$.extend($.contextMenu.defaults, {
-		// bumping this up to cover the "hidden" (type_2 link) asset icon
-		zIndex: 2
-	});
+//	$.extend($.contextMenu.defaults, {
+//		// bumping this up to cover the "hidden" (type_2 link) asset icon
+//		zIndex: 2
+//	});
 
 
 	// construction of context menus
-	var buildContextMenus = function buildContextMenus($map, $matrix) {
+	var buildContextMenus = function buildContextMenus(map, $matrix) {
+console.log('building context menus for', map);
+
+		// because we've got multiple maps/trees now we'll bind all the
+		// new asset callbacks to the appropriate map
+
+		var newAssetCallback = function newAssetCallback(key, options) {
+console.log('new asset callback', arguments, this);
+
+				// add to tree root by default, unless we can
+				// find the child that was clicked on
+				// TODO don't hardcode the assetid to support teleport
+//				var $parent = $(map.get_container().selector + ' li[assetid=1]');
+				var $parent = $(map.get_container().selector + ' > ul > li[assetid]');
+				var $this = $(this);
+
+				// we clicked on an asset
+				if ($this.parent('li[assetid]').length) {
+					$parent = $this.parent('li[assetid]');
+				}
+console.log('creating new', key, 'with parent', $parent);
+
+				sq_backend.createAsset(key, $parent);
+//				sq_backend.createAsset(key, $parent, parentPosition);
+		};
+
+		var newAssetItems = $.extend(true, {}, sq_asset.newMenuItems);
+		// this is the top level menu
+		$.each(newAssetItems, function(i, v) {
+			if (!newAssetItems.hasOwnProperty(i) || !v.items) return true;
+			$.each(v.items, function(i1, v1) {
+				if (!v.items.hasOwnProperty(i1) || !v1.callback) return true;
+//				v1.callback = $.proxy(v1.callback, map);
+				v1.callback = newAssetCallback;
+			});
+		});
+		// folder needs to be done separately
+		newAssetItems.folder.callback = newAssetCallback
+
+		// and for those callbacks on the asset context menu
+		var assetTypeMenus = $.extend(true, {}, sq_asset.assetScreens);
+		$.each(assetTypeMenus, function(i, v) {
+			if (!assetTypeMenus.hasOwnProperty(i)) return true;
+			v['new'].items = newAssetItems;
+		});
 
 //$map = $map.get_container();
 //console.log($map);
@@ -269,29 +316,29 @@ console.log('options.$target', options);
 				// indicate our work is done, otherwise we want to keep the
 				// mode the same
 				if (!options.$target) {
-console.log('context menu hide changing map mode from', $map.mode.current);
-					$map.mode.change($map.mode.normal);
+console.log('context menu hide changing map mode from', map.mode.current);
+					map.mode.change(map.mode.normal);
 				}
 			}
 		};
 
 
 		// context menu for move/link/clone
-		$map.menuSelectors['select'] = function() { return $('li.jstree-leaf', $map.get_container().selector); };
+		map.menuSelectors['select'] = function() { return $('li.jstree-leaf', map.get_container().selector); };
 //console.log('selector', $map.menuSelectors['select']().selector);
 		$.contextMenu({
-			selector: $map.menuSelectors['select']().selector,
+			selector: map.menuSelectors['select']().selector,
 			trigger: 'none',
 			disabled: true,
 			events: $.extend({}, defaultContextEvents, {
 				hide: function(options) {
-					$map.mode.change($map.mode.normal);
+					map.mode.change(map.mode.normal);
 				}
 			}),
 			callback: function(key, options) {
 console.log('stuff to do stuff with');
-console.log($map.dnd_info);
-				var t = $.jstree._reference($map.selector);
+console.log(map.dnd_info);
+				var t = $.jstree._reference(map.selector);
 console.log('info', t.data.dnd);
 			},
 			items: {
@@ -364,10 +411,10 @@ console.log('target', options.$target);
 
 		// context menu for useme via left click
 //		$map.menuSelectors['useme-li'] = $map.selector + ' li';
-		$map.menuSelectors['useme-li'] = function() { return $('li', $map.get_container().selector); };
+		map.menuSelectors['useme-li'] = function() { return $('li', map.get_container().selector); };
 		$.contextMenu({
 			// TODO need to allow expansion when this is active
-			selector: $map.menuSelectors['useme-li']().selector,
+			selector: map.menuSelectors['useme-li']().selector,
 			trigger: 'right',
 			disabled: true,
 			events: $.extend({}, defaultContextEvents, {
@@ -381,10 +428,10 @@ console.log('target', options.$target);
 
 		// context menu for useme via left click
 //		$map.menuSelectors['useme-name'] = $map.selector + ' a.asset_name';
-		$map.menuSelectors['useme-name'] = function() { return $('a.asset_name', $map.get_container().selector); };
+		map.menuSelectors['useme-name'] = function() { return $('a.asset_name', map.get_container().selector); };
 		$.contextMenu({
 			// TODO need to allow expansion when this is active
-			selector: $map.menuSelectors['useme-name']().selector,
+			selector: map.menuSelectors['useme-name']().selector,
 			trigger: 'right',
 			disabled: true,
 			items: usemeItems,
@@ -393,13 +440,14 @@ console.log('target', options.$target);
 
 
 //		$map.menuSelectors['asset'] = $map.selector + ' li[assetid] a';
-		$map.menuSelectors['asset'] = function() { return $('li[assetid] a', $map.get_container().selector); };
+		map.menuSelectors['asset'] = function() { return $('li[assetid] a', map.get_container().selector); };
 		$.contextMenu({
-			selector: $map.menuSelectors['asset']().selector,
+			selector: map.menuSelectors['asset']().selector,
 			trigger: 'right',
 			build: function($trigger, e) {
 				var $asset = $trigger.parent('li[assetid]');
-				var items = sq_asset.assetScreens[$asset.attr('type_code')];
+//				var items = sq_asset.assetScreens[$asset.attr('type_code')];
+				var items = assetTypeMenus[$asset.attr('type_code')];
 
 
 console.log(arguments);
@@ -425,7 +473,7 @@ console.log('asset context callback', this, arguments, $trigger);
 //							});
 
 //							var t = $.jstree._reference('#asset_map');
-							var t = $map.jstree;
+							var t = map.jstree;
 							var s = t.data.ui.selected;
 							var p = s.offset();
 							var e = $.Event('mousemove', {
@@ -453,7 +501,7 @@ console.log('attempt to drop', this, arguments);
 										}, t));
 
 									return false;
-								}, $map));
+								}, map));
 /*
 								.delegate("a", "mousedown.jstree", $.proxy(function (e) {
 										if(e.which === 1) {
@@ -508,9 +556,9 @@ console.log(arguments, screenUrl);
 
 
 //		$map.menuSelectors['main'] = $map.selector;
-		$map.menuSelectors['main'] = function() { return $($map.get_container().selector); };
+		map.menuSelectors['main'] = function() { return $(map.get_container().selector); };
 		$.contextMenu({
-			selector: $map.menuSelectors['main']().selector,
+			selector: map.menuSelectors['main']().selector,
 			trigger: 'right',
 			callback: function(key, options) {
 console.log('main context callback', arguments);
@@ -524,8 +572,10 @@ console.log('main context callback', arguments);
 				// sq_assetMap.backend.createAsset(key, 1, undefined);
 				sq_backend.createAsset(key, 1);
 			},
-			items: sq_asset.newMenuItems
+			items: newAssetItems
+//			items: sq_asset.newMenuItems
 		});
+
 
 	}; // buildContextMenus
 
@@ -545,17 +595,6 @@ console.log('main context callback', arguments);
 
 	// this is mostly static information
 	var asset = function asset() {
-		this.status = {
-			1: 'archived',
-			2: 'underConstruction',
-			4: 'pendingApproval',
-			8: 'approvedToGoLive',
-			16: 'live',
-			32: 'upForReview',
-			64: 'safeEdit',
-			128: 'safeEditPendingApproval',
-			256: 'safeEditApprovedToGoLive'
-		};
 	};
 
 
@@ -566,8 +605,29 @@ console.log('main context callback', arguments);
 	var sq_asset = $.squiz.matrix.asset = new asset();
 
 	$.extend(asset.prototype, {
+		status: {
+			1: 'archived',
+			2: 'underConstruction',
+			4: 'pendingApproval',
+			8: 'approvedToGoLive',
+			16: 'live',
+			32: 'upForReview',
+			64: 'safeEdit',
+			128: 'safeEditPendingApproval',
+			256: 'safeEditApprovedToGoLive'
+		},
+
+		linkType: {
+			1: 'regular', // TODO terminology
+			2: 'hidden',
+			3: 'notice'
+		}
+	});
+
+	$.extend(asset.prototype, {
 		// handy
 		statusByName: invert($.squiz.matrix.asset.status),
+		linkTypeByName: invert($.squiz.matrix.asset.linkType),
 
 		// the menu items for "new asset"
 		newMenuItems: {},
@@ -595,24 +655,36 @@ console.log('main context callback', arguments);
 			var types = [];
 			// a map of arrays of type names for sorting
 			var subTypes = {};
-
+/*
 			// handle the action of a new asset
+			// 'this' refers to the containing map
 			var newAssetCallback = function(key, options) {
+console.log('new asset callback', arguments, this);
 				// default add to tree root
 // TODO we have many maps now
+
+				var container = this.get_container();
+
+				// add to tree root by default, unless we can
+				// find the child that was clicked on
+				// TODO don't hardcode the assetid to allow teleport
+				var $parent = $(container.selector + ' li[assetid=1]');
+
 //				var $parent = $(sq_assetMap.selector + ' li[assetid=1]');
-				var $parent = $(sq_assetMap.selector + ' li[assetid=1]');
+//				var $parent = $(this.selector + ' li[assetid=1]');
 				var $this = $(this);
 
 				// we clicked on an asset
 				if ($this.parent('li[assetid]').length) {
 					$parent = $this.parent('li[assetid]');
 				}
+console.log('creating new', key, 'with parent', $parent);
 
 				// if options.$trigger is not a jquery then we're adding to the tree root
-				sq_backend.createAsset(key, $parent/*, parentPosition*/);
+				sq_backend.createAsset(key, $parent);
+//				sq_backend.createAsset(key, $parent, parentPosition);
 			}
-
+*/
 			// Check each type that we find
 			$xml.find('type').each(function() {
 				var $this = $(this);
@@ -662,7 +734,8 @@ console.log('main context callback', arguments);
 						// TODO need to use the generic icon when this fails
 						icon: type,
 						info: $this,
-						callback: newAssetCallback
+						callback: true // marker to be replaced in buildContextMenus
+//						callback: newAssetCallback
 					};
 					// info for sorting
 					subTypes[path].push(unescape($this.attr('name')));
@@ -735,13 +808,13 @@ console.log(type, longest);
 			items['folder'] = {
 				name: 'Folder',
 				icon: 'folder',
-				callback: newAssetCallback
+				callback: true // marker to be replaced in buildContextMenus
+//				callback: newAssetCallback
 			};
 			items['order'].push('sep');
 			items['order'].push('folder');
 
 			// preferring to do the folder CSS here because the base URL can change
-//				sq_assetMap.util.createCSSRule('folder');
 			sq_backend.createIconCSS('folder');
 
 
@@ -770,7 +843,7 @@ console.log('This needs to be populated with the entry from the most recently cr
 				},
 				'new': {
 					name: 'New Child',
-					items: items
+//					items: items
 				}
 			};
 
@@ -1044,15 +1117,17 @@ console.log(xml);
 	// this is the object that stores the tree state
 	$.extend(true, tree.prototype, {
 		// TODO allow overriding
-//		debug: true,
-		debug: false,
+		debug: true,
+//		debug: false,
 
 		model: {
 			// root of the tree
 			assetid: 1,
+//			linkid: 1,
 			parent: undefined,
 			attr: {
-				assetid: 1
+				assetid: 1,
+				linkid: 1
 			},
 
 			// this is the only "artificial" property (for now)
@@ -1131,11 +1206,67 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 							sq_tree._buildBranch($(that.model), $(xml).find('assets'));
 
 							$(sq_backend).triggerHandler('init.assetMap', {$xml: $(xml).find('assets')});
+						},
+						complete: function() {
+							// start checking for activity elsewhere
+							sq_tree.checkRefresh();
 						}
 					});
 				}
 			});
 		},
+
+
+		// see AssetMap.java:246
+		checkRefresh: function checkRefresh() {
+			if (sq_assetMap.debug) console.log('checking for refresh', new Date());
+			// TODO we could be anal and check for a string.. meh
+			if (SQ_REFRESH_ASSETIDS) {
+				this.refreshAssets(SQ_REFRESH_ASSETIDS.split(/,|\|/));
+				SQ_REFRESH_ASSETIDS = '';
+			}
+
+			// check again
+			setTimeout($.proxy(this.checkRefresh, this), sq_matrix.defaults.refreshInterval);
+		},
+
+
+		refreshAssets: function refreshAssets(assetIds) {
+			assetIds = $.grep(assetIds, function(v, k){
+                return $.inArray(v, assetIds) === k;
+            });
+console.log('refreshing assets', assetIds);
+
+			// after creating a new asset there will be two refresh requests
+			// first for the parent and second for the newly created node
+
+			var refreshAsset = function refreshAsset(assetId, remaining) {
+				// find takes a dom node with assetid attribute and returns
+				// the model entry
+				var modelRoot = sq_tree.findNode($('<ins assetid="' + assetId + '"/>'));
+				if (!modelRoot) {
+					console.log('Cannot find model node for asset', assetId);
+					return;
+				}
+
+				// add the attributes from the model
+				$(modelRoot).attr(modelRoot.attr);
+//console.log($(modelRoot).attr('linkid'), modelRoot.attr);
+
+				return sq_tree._getChildren($(modelRoot), false, function() {
+console.log('refresh finished');
+					// this doesn't completely wait until the assets have been
+					// handled as _getChildren calls _buildBranch which does
+					// the model manipulation
+					if (remaining.length) {
+						refreshAsset(remaining.shift(), remaining);
+					}
+				});
+			};
+
+			refreshAsset(assetIds.shift(), assetIds);
+		},
+
 
 		_buildBranch: function($root, $xml, callback) {
 			if (this.debug) {
@@ -1165,21 +1296,116 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 				return fields[fieldName] ? fields[fieldName](asset.attr(fieldName)) : asset.attr(fieldName);
 			}
 
-			// let the UIs know that we're loading a branch
-			$(sq_ui).triggerHandler('nodeLoading.assetMap', {
-				root: $root
-			});
+
+			// asset is an XML element
+			var prepDetails = function prepDetails(asset) {
+				var $asset = $(asset);
+
+				// these are used in the UI (jstree)
+				var info = {
+					data: getField($asset, 'name'),
+					attr: {
+						// see http://stackoverflow.com/questions/6105905/drag-and-drop-events-in-dnd-plugin-in-jstree-are-not-getting-called
+						'class': 'jstree-drop'
+					},
+					state: getField($asset, 'num_kids') > 0 ? 'closed' : undefined
+				};
+
+				if (asset.attributes.length) {
+					// record our parent
+					$asset.attr('parentid', $root.attr('assetid'));
+
+					// these are used to manage the model of the tree
+					// TODO this is bad, should consider using prop or data instead to store the values
+					// see http://api.jquery.com/prop/
+					$.each(asset.attributes, function(i, attr) {
+						info.attr[attr.name] = getField($asset, attr.name);
+					});
+					// allow some children
+					info._children = [];
+					// see https://github.com/jquery/jquery/blob/master/src/data.js#L191
+					info.uniqueId = info.attr.uniqueId = String(Math.random()).replace(/\D/g, '');
+				}
+
+				return info;
+			};
+
 var modelRoot = this.findNode($root);
 if (!modelRoot) {
 	console.log('Cannot find model node for branch at', $root);
 	return;
 }
+			// let the UIs know that we're loading a branch
+			// TODO this notification needs to happen earlier
+			$(sq_ui).triggerHandler('nodeLoading.assetMap', {
+				$root: $root
+			});
+
+			// before adding a node we need to check if that node
+			// already exists in the tree, and the nodes position in the
+			// tree.  Some operations that may happen that we're expected
+			// to handle here are add, remove, rename
+
+			// to support this we'll loop through the existing children
+			// first and look for a corresponding entry in $xml
+			// if found, update it (not sure about location/sorting yet)
+			// if not, remove it
+			// remove entry from $xml
+
+			// after we've gone through the existing nodes all we'll be left
+			// with is new nodes in $xml
+			// we can loop through them and add them where appropriate
+
+			// hopefully this deals with the sort_order of existing/updated
+			// nodes
+
+			// final pass will be going over the UI and matching for nodes
+			// in the model, this will remove spurious nodes added directly
+			// to the UI (TODO: an option to disable this to allow funky
+			// additions to the tree)
 
 			// Check each asset that we find
 			var that = this;
-			$xml.find('asset').each(function() {
-				var $asset = $(this);
 
+			// we need to check the modelRoot as well to handle updates (ie, rename)
+			$(sq_ui).triggerHandler('nodeUpdated.assetMap', {
+				node: prepDetails($xml.find('asset[assetid=' + modelRoot.attr.assetid + ']').get(0))
+			});
+
+			// first pass is to check the existing model for updates/deletions
+			if (modelRoot._children.length) {
+				for (var i = modelRoot._children.length - 1; i >= 0; i--) {
+					var asset = modelRoot._children[i];
+console.log('looking for model asset', asset);
+
+					$existing = $xml.find('asset[assetid=' + asset.attr.assetid + ']');
+					if ($existing.length) {
+						// we have an existing model node and we need to update it
+
+						// remove it from the XML so we don't process it again
+						$existing.remove();
+
+						// let the UIs update
+						$(sq_ui).triggerHandler('nodeUpdated.assetMap', {
+							node: prepDetails($existing.get(0)),
+							$root: $root
+						});
+					}
+					else {
+console.log('removing', asset);
+						// we can remove this node
+						// TODO this blows because we need to find where this
+						// node exists over the entire model!
+						modelRoot._children.splice(i, 1);
+						$(sq_ui).triggerHandler('nodeRemoved.assetMap', {
+							node: asset
+						});
+					}
+				}
+			}
+
+			// now add new nodes
+			$xml.find('asset').each(function() {
 				// don't add ourself as a child of ourself (seen it happen in the case of the trash)
 				// we comparison to catch numbers vs letters
 				if ($root.attr('assetid') == $(this).attr('assetid')) {
@@ -1190,33 +1416,9 @@ if (!modelRoot) {
 					console.log('processing node', this);
 				}
 
+				var info = prepDetails(this);
+
 				if (this.attributes.length) {
-					// record our parent
-					// TODO why are we using our parents parent?
-//					$asset.attr('parentid', $root.assetid || $root.parent);
-					$asset.attr('parentid', $root.attr('assetid'));
-
-					// these is used in jstree
-					var info = {
-						data: getField($asset, 'name'),
-						attr: {
-							// see http://stackoverflow.com/questions/6105905/drag-and-drop-events-in-dnd-plugin-in-jstree-are-not-getting-called
-							'class': 'jstree-drop'
-						},
-						state: getField($asset, 'num_kids') > 0 ? 'closed' : undefined
-					};
-
-					// these are used to manage the model of the tree
-					// TODO this is bad, should consider using prop or data instead to store the values
-					// see http://api.jquery.com/prop/
-					$.each(this.attributes, function(i, attr) {
-						info.attr[attr.name] = getField($asset, attr.name);
-					});
-					// allow some children
-					info._children = [];
-					// see https://github.com/jquery/jquery/blob/master/src/data.js#L191
-					info.uniqueId = info.attr.uniqueId = String(Math.random()).replace(/\D/g, '');
-
 					// add it to the tree
 					// TODO fire an event
 					// be able to detect when this happened via a refresh
@@ -1239,10 +1441,18 @@ modelRoot._children.push(info);
 				}
 			});
 
+			// now remove things that only exist in the UI
+			// TODO: an option to disable this to allow funky
+			// additions to the tree
+
+
 			callback && callback();
 		},
 
-		// $current_asset is a model entry, not wrapped in jQuery
+		// $current_asset is a jQuery object representing the tree node
+		// that was opened
+		// TODO we should find the corresponding model entry before doing
+		// anything
 		_getChildren: function($current_asset, replace, callback) {
 			if (this.debug) {
 				console.log('_getChildren', arguments);
@@ -1264,7 +1474,7 @@ modelRoot._children.push(info);
 			var cls = 'loading' + String(Math.random()).replace(/\D/g, '');
 
 			// Create our ajax to send the XML
-			$.ajax({
+			return $.ajax({
 				url: sq_backend.getUrl(),
 				type: 'POST',
 				processData: false,
@@ -1277,7 +1487,19 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 				beforeSend: function () {
 					$current_asset
 						.children('a')
-						.append($('<img class="loading ' + cls + '" src="/dev/325.1.gif" width="12" height="12"></img>'));
+						.append(
+							// $('<img class="loading ' + cls + '" src="/dev/325.1.gif" width="12" height="12"></img>')
+							$('<img/>')
+								.addClass('loading')
+								.addClass(cls)
+								.attr({
+									// TODO better use of builtins...
+//									src: sq_backend.url + '/__lib/web/images/icons/asset_map/spinner.png',
+									src: '/dev/325.1.gif',
+									width: 12,
+									height: 12
+								})
+						);
 				},
 				success: function(xml) {
 					sq_tree._buildBranch($current_asset, $(xml), callback);
@@ -1512,12 +1734,7 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 	var sq_assetMap = $.squiz.matrix.assetMap = (new function(){}());
 
 
-	// - singleton, exposed methods
-	// the assetMap
-	// using a jquery object so we can bind events to it
-	// see http://stackoverflow.com/questions/1553342/custom-event-in-jquery-that-isnt-bound-to-a-dom-element
-//	var sq_assetMap = $.squiz.matrix.assetMap = $('<div/>');
-//	var sq_assetMap = $.squiz.matrix.assetMap = {
+	// an assetMap
 	function assetMap(index, container, settings) {
 		settings = $.extend({}, this.defaults, settings);
 		// for plugins to store data in
@@ -1526,7 +1743,6 @@ console.log(XMLHttpRequest, textStatus, errorThrown);
 		this._get_settings	= function () { return settings; };
 		this.get_index		= function () { return index; };
 		this.get_container	= function () { return container; };
-//		this.get_container_ul = function () { return container.children("ul:eq(0)"); };
 		this._set_settings	= function (s) {
 			settings = $.extend(true, {}, settings, s);
 		};
@@ -1544,60 +1760,77 @@ console.log('types are loaded, doing stuff with an assetMap');
 
 			// need to load all existing nodes (below teleport)
 			// and listen to new nodes added
-//			loadTreeUI.apply(this, [container]);
-			// TODO move loadTreeUI into initialise
 			this.initialise();
 
 			// TODO race condition here with initialisation
-			$(sq_ui).bind('nodeLoaded.assetMap', $.proxy(function(event, data) {
+			// could this be mitigated by binding after the existing nodes are loaded?
+			$(sq_ui)
+				.bind('nodeLoaded.assetMap', $.proxy(function(event, data) {
 //console.log('adding new node to', this, arguments);
 //console.trace();
 
-				// TODO probably not the best location for this
-				// jstree will open a parent node when you add a child,
-				// and we're listening to 'open_node.jstree' and firing
-				// a request to the server - however when using the goggles
-				// the request has already happened
-				// setting hasOpened == 'true' avoids a second request
-				data.$root.attr('hasOpened', 'true');
+					// TODO probably not the best location for this
+					// jstree will open a parent node when you add a child,
+					// and we're listening to 'open_node.jstree' and firing
+					// a request to the server - however when using the binoculars
+					// the request has already happened
+					// setting hasOpened == 'true' avoids a second request
+					data.$root.attr('hasOpened', 'true');
 
-//				this.get_container().jstree('create', data.$root, data.node.attr['sort_order'] || 'inside', data.node, false, true);
-				this.jstree.create(data.$root, data.node.attr['sort_order'] || 'inside', data.node, false, true);
-			}, this));
+					var root = this.jstree._get_node('[assetid=' + data.$root.attr('assetid') + ']');
+					if (!root) {
+						console.log('Cannot find parent node for new asset', arguments);
+						return;
+					}
+
+					this.jstree.create(root, data.node.attr['sort_order'] || 'inside', data.node, false, true);
+				}, this))
+				.bind('nodeRemoved.assetMap', $.proxy(function(event, data) {
+console.log('removing node identified by', data.node);
+					// attempt to remove the node by assetid
+					// this _should_ pick up the asset in multiple places
+					this.jstree.remove('[assetid=' + data.node.attr.assetid + ']');
+				}, this))
+				.bind('nodeUpdated.assetMap', $.proxy(function(event, data) {
+console.log('nodeUpdated', arguments);
+					var $node = this.jstree._get_node('[assetid=' + data.node.attr.assetid + ']');
+
+					if (!$node) {
+						// this can happen if jstree.correct_state has been called
+						// inadvertently, so we'll re-add this node
+						var root = this.jstree._get_node('[assetid=' + data.$root.attr('assetid') + ']');
+console.log('root', root);
+if (!root) {
+	console.log('fail');
+	return;
+}
+						this.jstree.create(root, data.node.attr['sort_order'] || 'inside', data.node, false, true);
+						return;
+					}
+
+					// update the name
+					this.jstree.set_text($node, data.node.attr.name);
+
+					// update the expansion of the node
+//					var knownBranch = !$node.hasClass('jstree-leaf');
+					if (parseInt(data.node.attr.num_kids, 10) > 0) {
+						$node
+							.removeClass('jstree-leaf')
+							.removeClass('jstree-opened')
+							.addClass('jstree-closed');
+					}
+					else {
+						$node
+							.removeClass('jstree-closed')
+							.removeClass('jstree-opened')
+							.addClass('jstree-leaf');
+					}
+				}, this));
 
 		}, this));
-/*
-		// if we haven't initialised yet, let's kick that off, otherwise
-		// we just need to hook up our handlers
-		if (sq_tree.inititialise()) {
-console.log('types already loaded, doing stuff with an assetMap');
-		}
-		else {
-			// let's do the initialisation dance
-			sq_tree.initialise();
-
-			var that = this;
-			$(sq_ui).bind('typesLoaded.squiz', function(event, data) {
-				console.log('types are loaded, doing stuff with an assetMap');
-			});
-		}
-*/
 	};
-/*
-	var sq_assetMap = $.squiz.matrix.assetMap = new assetMap(index, container, settings) {
-		settings = $.extend({}, sq_assetMap.defaults, settings);
-		// for plugins to store data in
-		this.data = { core : {} };
-		this.get_settings	= function () { return $.extend(true, {}, settings); };
-		this._get_settings	= function () { return settings; };
-		this.get_index		= function () { return index; };
-		this.get_container	= function () { return container; };
-		this.get_container_ul = function () { return container.children("ul:eq(0)"); };
-		this._set_settings	= function (s) {
-			settings = $.extend(true, {}, settings, s);
-		};
-	}();
-*/
+
+
 	$.extend(true, assetMap.prototype, {
 		debug: true,
 /*
@@ -1632,6 +1865,8 @@ console.log('this', this);
 // this is done by 'instances'
 //		trees: [],
 
+		// need to load all existing nodes (below teleport)
+		// and listen to new nodes added
 		initialise: function() {
 
 			function addExistingNodes(tree, root) {
@@ -1644,6 +1879,7 @@ console.log('this', this);
 					}
 				}
 			}
+console.log('initialising', this);
 
 			this
 				.get_container()
@@ -1655,6 +1891,33 @@ console.log('this', this);
 
 					// enable context menus
 					this._mode.normal.enter.call(this);
+				}, this))
+				.bind('create_node.jstree', $.proxy(function(evt, data) {
+console.log('create_node event', arguments);
+					var $node = this.jstree._get_node('[assetid=' + data.args[2].attr.assetid + ']');
+					if (!$node) {
+						console.log('Cannot find newly created node', arguments);
+						return;
+					}
+console.log('$node', $node);
+
+					// inaccessible overrides type2 in terms of display
+					// see MatrixTreeCellRenderer.java:83
+
+					// see Asset.java:441
+					// TODO externalise the image locations
+					if ($node.attr('accessible') !== '1') {
+						$('<img/>')
+							.attr('src', sq_backend.url + '/__lib/web/images/icons/asset_map/not_accessible.png')
+							.css('vertical-align', 'bottom')
+							.appendTo($('a > ins.jstree-icon', $node).empty());
+					}
+					if ($node.attr('link_type') === sq_asset.linkTypeByName.hidden) {
+						$('<img/>')
+							.attr('src', sq_backend.url + '/__lib/web/images/icons/asset_map/not_visible.png')
+							.css('vertical-align', 'bottom')
+							.appendTo($('a > ins.jstree-icon', $node).empty());
+					}
 				}, this))
 				.jstree({
 					plugins:[
@@ -1686,7 +1949,6 @@ console.log('this', this);
 								attr: {
 									// TODO these may be different according to prefs/teleport
 									assetid: 1,
-//								uniqueId: sq_assetMap._tree.model.uniqueId
 									uniqueId: sq_tree.model.uniqueId,
 									type_code: 'root_folder'
 								}
@@ -1703,8 +1965,8 @@ console.log('this', this);
 
 								// we can check for valid parents here
 								// potentially circumventing the "going to fail" hipo
-	//								if(!m.np.hasClass("someClassInTarget")) return false;
-	//								if(!m.o.hasClass("someClassInSource")) return false;
+//								if(!m.np.hasClass("someClassInTarget")) return false;
+//								if(!m.o.hasClass("someClassInSource")) return false;
 								return true;
 							}
 						}
@@ -1960,75 +2222,6 @@ console.log('custom mousedown', this);
 
 		// store the selectors for the different menus to accurately enable/disable
 //		menuSelectors: {},
-		// see AssetMap.java:246
-		checkRefresh: function checkRefresh() {
-			if (sq_assetMap.debug) console.log('checking for refresh', new Date());
-			// TODO we could be anal and check for a string.. meh
-			if (SQ_REFRESH_ASSETIDS) {
-				refreshAssets(SQ_REFRESH_ASSETIDS.split(/,|\|/));
-				SQ_REFRESH_ASSETIDS = '';
-			}
-
-			// check again
-			setTimeout(sq_assetMap.checkRefresh, sq_assetMap.params.refreshInterval);
-		},
-
-/*
-		get_children: function get_children(xml_get, parent, $current_asset, replace) {
-			// What do we add it to?
-			var $target = $(sq_assetMap.selector);
-
-			// are we replacing the contents?
-			replace = replace || false;
-
-			if (!parent) {
-				// Construct our XML to send
-				xml_get = sq_assetMap.util.getCommandXML('get assets', {}, [{
-					assetid: $current_asset.attr('assetid'),
-					start: 0,
-					limit: sq_assetMap.params.fetchLimit,
-					linkid: $current_asset.attr('linkid')
-				}]);
-			}
-
-			// for removing the loading indicator
-			var cls = 'loading' + String(Math.random()).replace(/\D/g, '');
-
-			// Create our ajax to send the XML
-			$.ajax({
-				url: sq_assetMap.backend.getUrl(),
-				type: 'POST',
-				processData: false,
-				data: xml_get,
-				contentType: "text/xml",
-				dataType: 'xml',
-				error: function (XMLHttpRequest, textStatus, errorThrown) {
-console.log(XMLHttpRequest, textStatus, errorThrown);
-				},
-				beforeSend: function () {
-					$current_asset.children('a').append($('<img class="loading ' + cls + '" src="/dev/325.1.gif" width="12" height="12"></img>'));
-				},
-				success: function(xml) {
-					// (re)build the list
-					if (replace || !parent) {
-						$target = $current_asset;
-					}
-
-					sq_assetMap._tree.buildBranch($target, $(xml));
-//						$.each(sq_assetMap.trees, function(tree) {
-//							// TODO the parsing of the XML should be here, not in each tree
-//							tree.buildBranch.apply(tree, [$target, $(xml)]);
-////							this.triggerHandler('nodeLoaded.assetMap', {$xml: $(xml)});
-//						})
-				},
-				complete: function() {
-					// Remove loading indicator
-					$('.' + cls, $current_asset).remove();
-				}
-			});
-
-		},
-*/
 		_locateAsset: function(info, callback) {
 			var currentInfo = info.shift();
 
